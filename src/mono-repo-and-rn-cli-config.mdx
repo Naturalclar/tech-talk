@@ -1,0 +1,164 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+
+export { swiss as theme } from "mdx-deck/themes";
+
+## monorepoによる複数のアプリ管理 とrn-cli.config
+
+@natural_clar
+
+---
+
+## 自己紹介
+- Jesse
+- 株式会社CureApp.
+- アメリカ人
+- フルスタックエンジニア
+- @natural_clar
+
+---
+
+## CureApp
+
+- 治療アプリの開発
+- Universal JS 
+- Typescript, React, ReactNative, Node
+- typeの共有
+- ドメインの共有
+- monorepo
+
+---
+
+## monorepoとは
+
+---
+
+- 複数の子パッケージ
+- `lerna`や`yarn workspaces`
+- https://github.com/lerna/lerna
+- @babelやcreate-react-appで使われている
+
+---
+
+```
+root/
+  ├ packages/
+  │　└ assets/
+  │    └src
+  │    └package.json 
+  │  └ interfaces/
+  │    └src
+  │    └package.json 
+  │  └ core-v1/
+  │    └src
+  │    └package.json 
+  │  └ core-v2/
+  │    └src
+  │    └package.json 
+  │  └ newApp-v1/
+  └ package.json
+```
+
+---
+
+## なぜmonorepoを？
+
+---
+
+- 複数バージョンの同時並行開発
+- 同ドメインを使う複数アプリの開発
+
+---
+
+## 平和な世界！
+
+---
+
+# エラーの嵐！
+
+---
+
+- 複数のreact-nativeを読み込んでしまう
+- monorepo上のassetsを読み込まない
+
+---
+
+### 救世主
+- rn-cli.config
+
+---
+
+## rn-cli.config とは
+
+---
+
+- react-nativeのbundlerであるmetroの設定ファイル
+- react-nativeでtypescriptを使用する為にも必要
+
+---
+
+### 解決策
+- 他のパッケージのreact-nativeをblacklistにいれる
+- 依存先の入っている子パッケージをwatchFoldersでWatchする
+
+---
+
+```js
+const path = require('path')
+const blacklist = require('metro-config/src/defaults/blacklist')
+const fs = require('fs')
+
+// monorepo内の他のPackageをWatchする
+const watchFolders = [
+  path.resolve(__dirname, '../..'),
+]
+
+// monorepo内にある他のReact-nativeのパスをBlacklistに入れる
+const workspacesBlacklist = ['.DS_Store', 'lib', 'CurrentApp']
+
+const workspaces = fs
+  .readdirSync('..')
+  .filter(w => !workspacesBlacklist.includes(w))
+
+module.exports = {
+  // monorepoの中にあるRNのパスを解決させる
+  resolver: {
+    blacklistRE: blacklist(
+      workspaces.reduce(
+        (acc, workspacePath) =>
+          acc.concat([
+            new RegExp(
+              path.join(workspacePath, 'node_modules', 'react-native', '.*')
+            ),
+            new RegExp(
+              path.join(
+                workspacePath,'node_modules','.*','react-native','.*')
+            ),
+          ]),
+      )
+    ),
+  },
+  watchFolders,
+}
+```
+
+---
+
+コードは割愛:bow:
+
+---
+
+問題はまだある
+
+---
+
+RN 0.57.2以降から
+- 子パッケージ内の画像を読み込まない
+- https://github.com/facebook/metro/issues/290
+
+---
+
+とりあえず画像は各パッケージに
+
+---
+
+ありがとうございました:bow:
