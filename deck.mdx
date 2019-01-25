@@ -2,13 +2,103 @@ import { docco } from 'react-syntax-highlighter/styles/hljs'
 
 export { swiss as theme } from "mdx-deck/themes";
 
-## Hello World
+export { CodeSurfer } from "mdx-deck-code-surfer";
+
+### Storybookを使ったReact−NativeのテストをWeb上で行う
+
+- @natural_clar
 
 ---
 
-## 自己紹介
+### 自己紹介
 
----
-
-- Jesse Katsumata
+- Jesse Katsumata [@natural_clar](https://twitter.com/natural_clar)
 - CureApp
+- React Nativeを使った治療アプリの開発
+- アメリカ人 :flag-us:
+
+---
+
+## storybookとは :book:
+
+---
+
+- Componentを表示して、見た目が期待通りであるかテストする為のツール
+- React, React-Native, Vue等いろんなライブラリで使える
+
+---
+
+### react-native版のstorybook
+
+- `@storybook/react-native`
+
+---
+
+### RN版Storybookの利点 :tada:
+
+- 実機での見た目の確認が行える
+- Expoアプリとしてデザイナーチームに共有できる
+
+---
+
+### RN版Storybookの欠点 :rain_cloud:
+
+- エミュレータの立ち上げに時間がかかる
+- Portを取られるので実行中、アプリの方の動作確認が行えない
+
+---
+
+## もっと効率良く行えないか？ :thinking_face:
+
+---
+
+## react-native-web
+
+---
+
+- react-native特有の`<View>`や`<Text>`等のコンポーネントをWebで表示させる
+- Twitter Liteで使用されている
+
+---
+
+### react-nativeのstorybookをwebで表示させる
+
+---
+
+- `.storybook`に`webpack.config.js`をいれる
+- aliasを使って`react-native`を`import`してる箇所を`react-native-web`に変換する
+- `@storybook/react`の方を使用
+
+---
+
+import { CodeSurfer } from "mdx-deck-code-surfer"
+
+<CodeSurfer
+  title="webpack.config.js"
+  code={require("!raw-loader!./my-snippet.js")}
+  lang="javascript"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: ".storybookフォルダにいれる"},
+    { lines: [1], notes: "storybookのconfig"},
+    { range: [5, 7] , notes: "aliasの設定"},
+  ]}
+/>
+
+---
+
+## RN-Web版Storybookの利点
+
+- エミュレータの起動を待つ必要が無い
+- アプリとStorybookを同時に開ける
+
+---
+
+### 実演
+
+- [このリンク](https://github.com/Naturalclar/react-native-storybook-web)からリポジトリに飛べます
+
+---
+
+# ありがとうございました
