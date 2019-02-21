@@ -4,9 +4,11 @@ export { swiss as theme } from "mdx-deck/themes";
 
 export { CodeSurfer } from "mdx-deck-code-surfer";
 
-### Storybookを使ったReact−NativeのテストをWeb上で行う
+
+### React Native WebとStorybookによるアプリケーション開発の効率化
 - @natural_clar
-- we are javascripters! @28th
+- RNstartup #2
+
 
 ---
 
@@ -19,9 +21,21 @@ export { CodeSurfer } from "mdx-deck-code-surfer";
 - Twitter: [@natural_clar](https://twitter.com/natural_clar)
 - Github: [@Naturalclar](https://github.com/Naturalclar)
 
+<img 
+  src={require("file-loader!../assets/cat.jpg")} 
+  width={'200'} 
+  style={{position:'absolute',top:'10%', right: '-70%'}}
+/>
+
 ---
 
 ## storybookとは :book:
+
+<img 
+  src={require("file-loader!../assets/storybook-logo.png")} 
+  width={'200'} 
+  style={{position:'absolute',top:'10%', right: '-170%'}}
+/>
 
 ---
 
@@ -77,7 +91,7 @@ import { CodeSurfer } from "mdx-deck-code-surfer"
 
 <CodeSurfer
   title="webpack.config.js"
-  code={require("!raw-loader!./my-snippet.js")}
+  code={require("!raw-loader!./webpack.js")}
   lang="javascript"
   showNumbers={false}
   dark={false}
@@ -94,12 +108,81 @@ import { CodeSurfer } from "mdx-deck-code-surfer"
 
 - エミュレータの起動を待つ必要が無い
 - アプリとStorybookを同時に開ける
+- 静的サイトとして楽に共有できる！
 
 ---
 
-### 実演
+## CircleCi Artifacts
 
-- [このリンク](https://github.com/Naturalclar/react-native-storybook-web)からリポジトリに飛べます
+---
+
+- CircleCI が持つ S3 に立てれるサイト
+- build-storybook でビルドした Storybook を格納させる
+- PRに自動的にURLを送るコメントを別途作成
+
+<img src={require("file-loader!../assets/artifact-report.png")} width={'60%'} />
+
+---
+
+<div style={{width: '80%', height: '80%'}}>
+<CodeSurfer
+  title="config.yml"
+  code={require("!raw-loader!./config.yml")}
+  lang="yml"
+  showNumbers={false}
+  dark
+  steps={[
+    { notes: "circleciのConfigファイル"},
+    { range: [1, 3], notes: "storybookの作成"},
+    { range: [4, 5] , notes: "artifactに設定"},
+    { range: [6, 8] , notes: "PRにコメントするスクリプト"},
+  ]}
+/>
+</div>
+
+---
+
+## 利点
+
+---
+
+開発タスクを完全に分離できる
+
+- Component の実装
+- Domain 要件の実装
+- Action の実装
+
+---
+
+### Expoで使うにあたっての問題点
+
+---
+
+- `@expo/vector-icons` がそのまま使えない
+- React Nativeのライブラリに依存している
+- react-native-vector-iconsなら大丈夫そう
+- でも expo なので　react-native-vector-icons は使えない
+
+---
+
+Babel プラグイン作成してます
+
+`babel-plugin-expo-vector-icons-storybook`
+
+<img src={require("file-loader!../assets/astexplorer.png")} width={'80%'} />
+
+---
+
+### 露骨な宣伝
+
+
+
+<img 
+  src={require("file-loader!../assets/cure-app-logo.png")} 
+  width={'100'} 
+  style={{position:'static',top:'10%', left: '30%'}}
+/>
+<img src={require("file-loader!../assets/bosyu.png")} width={'60%'} />
 
 ---
 
