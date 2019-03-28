@@ -2,8 +2,8 @@
   "scripts": {
     "start": "mdx-deck src/no-shortcuts-for-rn-upgrade.mdx",
     "pdf": "mdx-deck pdf",
-    "build": "mdx-deck build --no-html src/no-shortcuts-for-rn-upgrade.mdx",
-    "new": "scaffdog generate"
+    "build": "mdx-deck build --no-html src/no-shortcuts-for-rn-upgrade.mdx && cp -R ./src/assets ./dist/assets",
+    "new": "scaffdog generate" 
   },
   "name": "mdx-slide",
   "version": "1.0.0",

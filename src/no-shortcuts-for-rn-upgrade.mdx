@@ -55,13 +55,20 @@ RNStartUp #3
 - dependency のアップグレード
 - `build.gradle` や `.pbxproj` ファイルの変更
 - (56.0) Babel のライブラリ総入れ替え
+- (57.0) rn-cli.configの変更
+
+---
+
+## `build.gradle` や `.pbxproj` ファイルの変更
+
+- 普通にやろうとすれば Native の知識が必要
 
 ---
 
 ### RNのバージョンを上げる為のツール
 
-- (旧) react-native upgrade
-- react-native-git-update
+- (旧)react-native upgrade
+- react-native-git-upgrade
 
 ---
 
@@ -95,24 +102,27 @@ RNStartUp #3
 
 ---
 
-### RN 0.59.0 での変更点
-
-- いくつかの Modules が Deprecated となった
-
-- Lean Core Project 容量削減のために`@react-native-community`へと移動した。
-
-- NetInfo
-- Async Storage など
-
-今はまだ使えるが、今後削除されていく
-
----
-
 ## まとめ:
 
 - RN アップグレードは `56.0`, `57.0`が鬼門
 - それ以降はそこまで辛くない
 - 細かく考えるより`rn-diff-purge`を使って粛々とDiffを見てくのが結果的に早い
+
+---
+
+## RN 59.0 に Upgrade しました :muscle:
+
+---
+
+### RN 0.59.0 での変更点
+
+- いくつかの Modules が Deprecated となった
+
+- Lean Core Project 容量削減のために`@react-native-community`へと移動した。
+  - NetInfo
+  - Async Storage など
+
+- 今はまだ使えるが、今後削除されていく
 
 ---
 
