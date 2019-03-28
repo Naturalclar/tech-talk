@@ -1,0 +1,76 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+
+export { swiss as theme } from "mdx-deck/themes";
+
+## RN の Upgrade に近道なんてねぇんだよ
+
+RNStartUp #3
+
+---
+
+## 自己紹介
+
+---
+
+## Jesse Katsumata
+- CureApp
+- React Nativeを使った治療アプリの開発
+- アメリカ人 :flag-us:
+- Twitter: [@natural_clar](https://twitter.com/natural_clar)
+- Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+### React Native バージョンの歴史
+
+- 0.56.0 Babel 6 から Babel 7 に以降
+- 0.57.0 公式の typescript サポート
+- 0.59.0 React Hooks が使用可能に！ :tada:
+
+---
+
+しかしその裏でアップデートが必要
+
+---
+
+- 0.55.4 日本語、中国語の変換が確定されてしまうバグ発生
+- 0.57.0 `rn-cli.config.js` の Option のサイレントアップデート
+- 0.57.2 monorepo の場合、他の Package にある Assets から画像が読み込めないバグ発生(on going)
+- 0.59.0 `rn-cli.config.js` の名称が `metro.config.js` に変更
+
+---
+
+外部要因でアップデートが必要になることも
+
+---
+
+- 0.57.5 XCode 10にてビルドシステムが変わったことにより、iosのビルドが通らなくなってしまった問題の修正
+- Legacy Build なら通るが、今月から Legacy Build で作成したアプリの Apple Store 申請ができなくなったはず
+
+---
+
+- react-native upgrade
+- react-native-git-update
+
+- 長いあいだ更新されておらず、うまく動かない。
+- そもそも monorepo だと動かない
+
+---
+
+### 他に注意すること
+
+- `react-native-svg` などの Community Repo がちゃんと動いているか、確認する
+
+---
+
+### [rn-diff-purge](https://github.com/react-native-community/rn-diff-purge)
+
+- 0.59 から React Native 公式で採用され、community の Repository になった
+
+---
+
+- React Native 0.59 以降ならこれを用いたReact-native upgradeが使用できる
+
+---
+
+## ありがとうございました

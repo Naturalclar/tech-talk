@@ -23,10 +23,14 @@ export { swiss as theme } from "mdx-deck/themes";
 
 ---
 
+## Jesse Katsumata
+- CureApp
 - React Nativeを使った治療アプリの開発
 - アメリカ人 :flag-us:
 - Twitter: [@natural_clar](https://twitter.com/natural_clar)
 - Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
 
 ## ありがとうございました
 
