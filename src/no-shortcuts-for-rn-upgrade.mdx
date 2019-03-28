@@ -1,0 +1,123 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+import { CodeSurfer } from "mdx-deck-code-surfer"
+export { swiss as theme } from "mdx-deck/themes";
+
+## RN の Upgrade に近道なんてねぇんだよ
+
+RNStartUp #3
+
+---
+
+## 自己紹介
+
+<img src="/assets/cat.jpg" height="250" />
+
+- Jesse Katsumata アメリカ人 :flag-us:
+- CureApp - React Nativeを使った治療アプリの開発
+- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+## 話すこと
+
+- React-Native を Upgrade する理由
+- React-Native を Upgrade する際の詰まりどころ
+
+---
+
+### React Native ざっくり Change Log
+
+- `0.56.0`: Babel 6 から Babel 7 に以降
+- `0.57.0`: `metro-react-native-babel-preset`を使うようになり、typescript の導入が容易に
+- `0.59.0`: React Hooks が使用可能に！ :tada:
+
+---
+
+## しかしその裏でいろいろな問題が発生している
+
+---
+
+### Upgrade 障害
+
+- `0.55.4`: 日本語、中国語の変換が確定されてしまうバグ発生 :scream:
+- `0.57.0`: `rn-cli.config.js` の サイレントアップデート
+- `0.57.2`: monorepo の場合、他の Package にある Assets から画像が読み込めないバグ発生
+- `0.57.5`: XCode 10の新ビルドシステム対応
+
+---
+
+## React Native の Upgrade は一筋縄では行かない
+
+---
+
+## 主にやること
+
+- dependency のアップグレード
+- `build.gradle` や `.pbxproj` ファイルの変更
+- (56.0) Babel のライブラリ総入れ替え
+
+---
+
+### RNのバージョンを上げる為のツール
+
+- (旧) react-native upgrade
+- react-native-git-update
+
+---
+
+## react-native-git-upgrade
+
+- Kill
+
+<img src="/assets/kill-rn-git-upgrade.png" height="250" />
+
+---
+
+## [rn-diff-purge](https://github.com/react-native-community/rn-diff-purge)
+
+<img src="/assets/rn-diff-purge-readme.png" height="250" />
+
+---
+
+### rn-diff-purge
+
+<img src="/assets/rn-diff-purge-diff.png" height="250" />
+
+- RN の各バージョンで新規 init を行い、その差分を表示するツール
+- 各差分のパッチファイルも Readme に含まれている
+- `rn-diff` という別パッケージがあったが、更新が止まってしまっていた為 Fork されたもの。
+- 0.59 から React Native 公式で採用され、community の Repository になった
+
+---
+
+- React Native 0.59 以降ならこれを用いた`react-native upgrade`が使用できる
+- `react-native-cli`は Community Repository に切り離されるので`0.59`以前のバージョンでも使える様になってる？
+
+---
+
+### RN 0.59.0 での変更点
+
+- いくつかの Modules が Deprecated となった
+
+- Lean Core Project 容量削減のために`@react-native-community`へと移動した。
+
+- NetInfo
+- Async Storage など
+
+今はまだ使えるが、今後削除されていく
+
+---
+
+## まとめ:
+
+- RN アップグレードは `56.0`, `57.0`が鬼門
+- それ以降はそこまで辛くない
+- 細かく考えるより`rn-diff-purge`を使って粛々とDiffを見てくのが結果的に早い
+
+---
+
+## 良い Hooks Lifeを
+
+---
+
+## ありがとうございました
