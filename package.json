@@ -1,8 +1,9 @@
 {
   "scripts": {
     "start": "mdx-deck src/storybook-web-and-circleci/index.mdx",
-    "pdf": "mdx-deck pdf deck.mdx",
-    "build": "mdx-deck build deck.mdx"
+    "pdf": "mdx-deck pdf",
+    "build": "mdx-deck build deck.mdx",
+    "new": "scaffdog generate"
   },
   "name": "mdx-slide",
   "version": "1.0.0",
@@ -15,6 +16,7 @@
     "react-syntax-highlighter": "^10.1.2"
   },
   "devDependencies": {
+    "scaffdog": "^0.0.7",
     "file-loader": "^3.0.1",
     "mdx-deck-code-surfer": "^0.5.5",
     "raw-loader": "^1.0.0"
