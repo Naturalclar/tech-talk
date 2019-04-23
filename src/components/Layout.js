@@ -12,7 +12,7 @@ const styles = {
   header: {
     height: `20vw`,
     alignSelf: 'stretch',
-    backgroundColor: 'aquamarine',
+    backgroundColor: 'red',
   },
   body: {
     height: '30vw',
@@ -25,7 +25,7 @@ const styles = {
   footer: {
     height: `20vw`,
     alignSelf: 'stretch',
-    backgroundColor: 'aquamarine',
+    backgroundColor: 'red',
   },
 }
 
