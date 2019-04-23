@@ -1,6 +1,6 @@
 import { docco } from 'react-syntax-highlighter/styles/hljs'
-import { CodeSurfer } from "mdx-deck-code-surfer"
-export { swiss as theme } from "mdx-deck/themes";
+import { CodeSurfer } from 'mdx-deck-code-surfer'
+export { swiss as theme } from 'mdx-deck/themes'
 import { Layout } from '../components'
 
 <Layout>
@@ -13,7 +13,7 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 #### https://circleci.connpass.com/event/123860/
 
-<hr/>
+<hr />
 
 #### [@natural_clar](https://twitter.com/natural_clar)
 
@@ -35,10 +35,10 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 ### Circle CI Artifact
 
-<hr/>
+<hr />
 
 - ビルドされた`.jar` ファイルや `.ipa` ファイルなどを格納できる。
-- 指定されたパスの中身をS3に格納。
+- 指定されたパスの中身を S3 に格納。
 - https://circleci.com/docs/2.0/artifacts/
 
 </Layout>
@@ -47,12 +47,12 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 <Layout>
 
-### 静的サイトのArtifact
+### 静的サイトの Artifact
 
-<hr/>
+<hr />
 
 - 静的サイトのプレビュー
-- Storybookのプレビュー
+- Storybook のプレビュー
 - Test Coverage Report
 
 </Layout>
@@ -77,18 +77,55 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 ---
 
-
 <Layout>
 
 ### Klank
 
-<hr/>
+<hr />
 
-<img src="./assets/artifact-report.png" height="180"  />
+<img src="./assets/artifact-report.png" height="180" />
 
 - https://github.com/Naturalclar/klank
 - 指定パスの Artifact を PR に対してコメントする
 - パッと見に行けるので効率がいい
+
+</Layout>
+
+---
+
+<Layout>
+
+## 使い方
+
+</Layout>
+
+---
+
+<Layout>
+
+- config.yml で `store_Artifacts` する
+
+<img src="./assets/circleci_config.png" height="380" width="340" />
+
+</Layout>
+
+---
+
+<Layout>
+
+- Project の環境変数に `CIRCLE_TOKEN`, `GITHUB_TOKEN` をいれる
+
+<img src="./assets/circleci_env.png" height="380" />
+
+</Layout>
+
+---
+
+<Layout>
+
+- npm scripts に Artifact のパスをいれる
+
+<img src="./assets/circleci_npm.png" height="280" width="400" />
 
 </Layout>
 
@@ -119,17 +156,16 @@ https://github.com/Naturalclar/expo-typescript-starter
 
 ### 自己紹介
 
-<img src="./assets/cat.jpg" height="150" width='150' />
+<img src="./assets/cat.jpg" height="150" width="150" />
 
 - Jesse Katsumata アメリカ人 :flag-us:
-- CureApp - React Nativeを使った治療アプリの開発
+- CureApp - React Native を使った治療アプリの開発
 
 ##### Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
 
 </Layout>
 
 ---
-
 
 <Layout>
 
