@@ -23,6 +23,9 @@ jobs:
             - v{{ .Environment.CIRCLECI_CACHE_VERSION }}-dependencies-{{ .Branch }}-{{ checksum "deps.txt" }}
       - run: yarn
       - save_cache:
+          paths:
+            - node_modules
+          key: v{{ .Environment.CIRCLECI_CACHE_VERSION }}-dependencies-{{ .Branch }}-{{ checksum "deps.txt" }}
       - run:
           name: 'lint'
           command: yarn lint
@@ -34,6 +37,7 @@ jobs:
       - run:
           name: 'Report Slide Artifact to Pull Request'
           command: yarn klank
+
 workflows:
   version: 2.1
   test_deploy:
