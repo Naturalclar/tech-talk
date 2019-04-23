@@ -1,0 +1,41 @@
+version: 2.1
+
+executors:
+  default:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:8.11.3-stretch
+
+commands:
+  prepare:
+    steps:
+      - checkout
+      - run: ls package.json | xargs -n1 md5sum > deps.txt
+
+jobs:
+  test:
+    executor:
+      name: default
+    steps:
+      - prepare
+      - restore_cache:
+          keys:
+            - v{{ .Environment.CIRCLECI_CACHE_VERSION }}-dependencies-{{ .Branch }}-{{ checksum "deps.txt" }}
+      - run: yarn
+      - save_cache:
+      - run:
+          name: 'lint'
+          command: yarn lint
+      - run:
+          name: 'build'
+          command: yarn build
+      - store_artifacts:
+          path: ./dist
+      - run:
+          name: 'Report Slide Artifact to Pull Request'
+          command: yarn klank
+workflows:
+  version: 2.1
+  test_deploy:
+    jobs:
+      - test
