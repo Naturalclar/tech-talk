@@ -1,14 +1,15 @@
 {
   "scripts": {
-    "start": "mdx-deck src/talks/review-efficiently-with-artifact.mdx",
+    "start": "mdx-deck src/talks/debugging-react-native.mdx",
     "clean": "rm -rf dist",
     "pdf": "mdx-deck pdf",
     "build": "npm-run-all clean build:*",
-    "build:mdx": "mdx-deck build --no-html src/talks/review-efficiently-with-artifact.mdx",
+    "build:mdx": "mdx-deck build --no-html src/talks/debugging-react-native.mdx -d dist/talks",
     "build:assets": "cp -R ./src/assets ./dist/assets",
+    "build:home": "cp ./src/index.html ./dist/index.html",
     "new": "scaffdog generate",
     "lint": "eslint ./src",
-    "klank": "klank dist/index.html"
+    "klank": "klank dist/talks/index.html"
   },
   "name": "mdx-slide",
   "version": "1.0.0",
