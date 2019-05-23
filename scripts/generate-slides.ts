@@ -37,12 +37,26 @@ const main = () => {
     return path.extname(file) === '.mdx'
   })
 
-  console.log(mdxs)
-
+  // clean
+  exec(`yarn rimraf ./dist`)
+  exec(`yarn cpx ./src/assets ./dist/assets`)
   mdxs.forEach(mdx => {
     const title = getTitle(mdx)
-    exec(`yarn rimraf ./dist`)
-    exec(`yarn mdx-deck build --no-html ${mdx} ./dist/${title}`)
+    // build mdx files to separate folders
+    try {
+      exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, (err)=> {
+        if (err) {
+          // if error is caught, clean and rebuild with no-html flag
+          exec(`yarn rimraf ./dist/${title}`)
+          exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+        }
+      })
+    } catch(err) {
+      console.log(err.message)
+    }
+
   })
+  // move all assets to dist
+  exec(`yarn build:assets`)
 }
 main()

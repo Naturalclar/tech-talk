@@ -3,9 +3,9 @@
     "start": "mdx-deck src/talks/review-efficiently-with-artifact.mdx",
     "clean": "rm -rf dist",
     "pdf": "mdx-deck pdf",
-    "build": "npm-run-all clean build:*",
-    "build:assets": "cpx ./src/assets ./dist/assets",
-    "build:mdx": "mdx-deck build --no-html src/talks/review-efficiently-with-artifact/index.mdx",
+    "build": "./scripts/generate-slides.ts src/talks",
+    "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
+    "build:mdx": "mdx-deck build",
     "new": "scaffdog generate",
     "lint": "eslint ./src",
     "klank": "klank dist/index.html"
