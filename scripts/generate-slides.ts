@@ -2,7 +2,7 @@
 
 import fs from 'fs'
 import path from 'path'
-import { exec } from 'child_process'
+import { exec, execSync } from 'child_process'
 
 // recursively get files of given path
 const listDir = (dir: string, list: string[] = []): string[] => {
@@ -43,18 +43,15 @@ const main = () => {
   mdxs.forEach(mdx => {
     const title = getTitle(mdx)
     // build mdx files to separate folders
-    try {
-      exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, (err)=> {
-        if (err) {
-          // if error is caught, clean and rebuild with no-html flag
-          exec(`yarn rimraf ./dist/${title}`)
-          exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, (err)=> {
+      if (err) {
+        // if error is caught, clean and rebuild with no-html flag
+        exec(`yarn rimraf ./dist/${title}`)
+        exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
         }
-      })
-    } catch(err) {
-      console.log(err.message)
-    }
-
+    })
+    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
+    
   })
   // move all assets to dist
   exec(`yarn build:assets`)

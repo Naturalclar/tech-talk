@@ -6,6 +6,7 @@
     "build": "./scripts/generate-slides.ts src/talks",
     "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
     "build:mdx": "mdx-deck build",
+    "build:screenshot": "mdx-deck screenshot",
     "new": "scaffdog generate",
     "lint": "eslint ./src",
     "klank": "klank dist/index.html"
