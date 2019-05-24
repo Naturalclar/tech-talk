@@ -1,8 +1,8 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node
 
 const [title] = process.argv.slice(2)
 
-const slides = (slug: string) => {
+const slides = slug => {
   const thumbnailUrl = `./${slug}.png`
   const htmlUrl = `./${slug}/`
 
@@ -13,13 +13,7 @@ const slides = (slug: string) => {
 }
 const param = slides(title)
 
-const slidesHTML = ({
-  thumbnailUrl,
-  htmlUrl,
-}: {
-  thumbnailUrl: string
-  htmlUrl: string
-}) => {
+const slidesHTML = ({ thumbnailUrl, htmlUrl }) => {
   return `
           <div class="col-4">
             <a href="${htmlUrl}" >

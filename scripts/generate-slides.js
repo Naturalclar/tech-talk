@@ -1,11 +1,11 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node
 
-import fs from 'fs'
-import path from 'path'
-import { exec, execSync } from 'child_process'
+const fs = require('fs')
+const path = require('path')
+const { exec, execSync } = require('child_process')
 
 // recursively get files of given path
-const listDir = (dir: string, list: string[] = []): string[] => {
+const listDir = (dir, list = []) => {
   let fileList = list
   const files = fs.readdirSync(dir)
   files.forEach(file => {
@@ -20,7 +20,7 @@ const listDir = (dir: string, list: string[] = []): string[] => {
 }
 
 // get the name of folder that contains given dirpath
-const getTitle = (dir: string): string => {
+const getTitle = dir => {
   return path.basename(path.dirname(dir))
 }
 
