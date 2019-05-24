@@ -8,12 +8,23 @@ ignore: []
 ---
 
 
-# `{{ input }}.mdx`
+# `{{ input }}/index.mdx`
 
 ```md
 import { docco } from 'react-syntax-highlighter/styles/hljs'
 import { CodeSurfer } from "mdx-deck-code-surfer"
+import { Head } from 'mdx-deck'
+import { Meta } from '../../components'
 export { swiss as theme } from "mdx-deck/themes";
+
+<Head>
+  <Meta 
+    title="{{ input }}"
+    description="{{ input }}"
+    slug="{{ input }}"
+    publishedAt={new Date()}
+  />
+</Head>
 
 ## {{ input }}
 
@@ -21,7 +32,7 @@ export { swiss as theme } from "mdx-deck/themes";
 
 ## 自己紹介
 
-<img src="/assets/cat.jpg" height="250" />
+<img src="../assets/cat.jpg" height="250" />
 
 - Jesse Katsumata アメリカ人 :flag-us:
 - CureApp - React Nativeを使った治療アプリの開発

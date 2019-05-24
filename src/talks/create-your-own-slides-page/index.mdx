@@ -1,0 +1,173 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+import { CodeSurfer } from 'mdx-deck-code-surfer'
+import { Head } from 'mdx-deck'
+import { Meta } from '../../components'
+export { swiss as theme } from 'mdx-deck/themes'
+import MonacoEditor from 'react-monaco-editor'
+
+<Head>
+  <Meta
+    title="自分の登壇スライド用サイトを作ろう"
+    description="netlify, mdx-deck を使って自分の登壇資料をまとめるサイトを作る"
+    slug="create-your-own-slides-page"
+    publishedAt={new Date()}
+  />
+</Head>
+
+## 登壇スライドをサクッと作ってサイトにまとめよう
+
+- @naturalclar
+- [we are javascripters! @32nd](https://wajs.connpass.com/event/130865/)
+
+---
+
+## 自己紹介
+
+<img src="../assets/cat.jpg" height="250" />
+
+- Jesse Katsumata アメリカ人 :flag-us:
+- CureApp - React Native を使った治療アプリの開発
+- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+## 話すこと
+
+---
+
+- mdx-deckの紹介
+- 複数のmdxファイルを別々のスライドとして作成する
+
+---
+
+# [mdx-deck]()
+
+---
+
+### mdx-deck
+
+- markdownでSlideがかける
+- jsxも組み込める
+- 様々なテーマがある
+- このスライドもmdx-deckで作っている
+- 豊富なプラグインがある
+
+---
+
+## [CodeSurfer](https://github.com/pomber/code-surfer)
+
+---
+
+<CodeSurfer
+  title="helloworld.tsx"
+  code={require('!raw-loader!./helloworld.tsx')}
+  lang="typescriptreact"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: 'コードの紹介ができる' },
+    { lines: [1], notes: '行数にズームインもできる' },
+    { range: [5, 7], notes: 'コードの細かい部分を紹介するのに便利' },
+  ]}
+/>
+
+---
+
+## [MonacoEditor](https://microsoft.github.io/monaco-editor/)
+
+---
+
+### MonacoEditor
+
+- microsoft が提供している、vscode に内蔵されているエディタ
+- ブラウザ上で動かせるエディタを簡単に作れる
+- React 用には[react-monaco-editor](https://github.com/react-monaco-editor/react-monaco-editor)
+
+---
+
+### Slide開いたまま即席でDemoが行える
+
+<MonacoEditor
+  width="800"
+  height="600"
+  language="javascript"
+  theme="vs-dark"
+  value={''}
+  options={{fontSize: 20}}
+  onChange={() => {}}
+  editorDidMount={() => {}}
+/>
+
+---
+
+## mdx-deck はいいぞ
+
+---
+
+### 問題点
+
+- slideshareとかにそのまま上げられない
+- pdf に変換することはできる
+- pdfに変換すると絵文字が消えたりプラグインが効かなかったりする
+
+---
+
+## 自分でホスティングしよう！
+
+---
+
+## [Netlify](https://www.netlify.com/)
+
+---
+
+### Netlify
+
+- 無料でホスティングできるサービス
+- `yarn build`で作成されたものがそのまま表示される
+
+---
+
+## 悩んだところ:thinking_face:
+
+- `mdx-deck build` で一つのスライドしか作れない‥
+- twitterに呟いた時にカードが表示されない‥
+
+---
+
+<CodeSurfer
+  title="generate-slides.ts"
+  code={require('!raw-loader!./generate-slides.ts')}
+  lang="typescript"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: '再帰的にmdx-deckをbuildするスクリプト' },
+    { range: [8,20], notes: '拡張子.mdxのファイルを探す' },
+    { range: [47, 50], notes: 'それぞれ別のフォルダでbuildする' },
+    { line: [57], notes: 'twitter card用の画像はscreenshotで取得できる' },
+  ]}
+/>
+
+---
+
+<CodeSurfer
+  title="Meta.tsx"
+  code={require('!raw-loader!./Meta.tsx')}
+  lang="typescriptreact"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: 'meta情報を作るComponent' },
+    { lines: [11], notes: 'twitter cardに必要な情報を追加' },
+    { range: [3, 9], notes: '各スライドにMeta情報を入れる' },
+  ]}
+/>
+
+
+---
+
+index はまだ作成途中‥
+
+---
+
+## ありがとうございました
