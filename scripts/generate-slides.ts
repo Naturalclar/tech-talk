@@ -40,20 +40,36 @@ const main = () => {
   // clean
   exec(`yarn rimraf ./dist`)
   exec(`yarn cpx ./src/assets ./dist/assets`)
+  let template = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'index.html'),
+    'utf8'
+  )
   mdxs.forEach(mdx => {
     const title = getTitle(mdx)
     // build mdx files to separate folders
-    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, (err)=> {
+    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
       if (err) {
         // if error is caught, clean and rebuild with no-html flag
         exec(`yarn rimraf ./dist/${title}`)
         exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
-        }
+      }
     })
     execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
-    
+    exec(`./scripts/generate-oembed.ts ${title} > ./dist/${title}/oembed.json`)
+    exec(`./scripts/generate-index.ts ${title}`, (err, stdout) => {
+      template = template.replace(
+        '<!--REPLACE_ME-->',
+        `${stdout}<!--REPLACE_ME-->`
+      )
+      fs.writeFileSync(
+        path.join(__dirname, '..', 'dist', 'index.html'),
+        template,
+        'utf8'
+      )
+    })
   })
   // move all assets to dist
   exec(`yarn build:assets`)
+  exec(`yarn cpx ./src/_redirects ./dist`)
 }
 main()
