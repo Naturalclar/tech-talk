@@ -2,12 +2,7 @@ import React from 'react'
 
 // taken from https://github.com/Leko/slides
 
-export const Meta = ({
-  title,
-  locale = 'ja_JP',
-  publishedAt,
-  slug = title,
-}) => (
+const Meta = ({ title, locale = 'ja_JP', publishedAt, slug = title }) => (
   <>
     <meta property="og:locale" content={locale} />
     <meta property="og:title" content={title} />
@@ -34,3 +29,5 @@ export const Meta = ({
     <title>{title}</title>
   </>
 )
+
+export default Meta
