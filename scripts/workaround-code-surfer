@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+patch node_modules/mdx-deck/lib/html.js << DIFF
+31c31
+<       whitelist: ['mdx-deck', 'mdx-deck/themes', 'mdx-deck/layouts'],
+---
+>       whitelist: ['mdx-deck', 'mdx-deck/themes', 'mdx-deck/layouts', 'mdx-deck-code-surfer'],
+64a65
+> 
+DIFF

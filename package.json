@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "postinstall": "scripts/workaround-code-surfer",
     "start": "mdx-deck src/talks/create-your-own-slides-page/index.mdx",
     "clean": "rm -rf dist",
     "pdf": "mdx-deck pdf",
