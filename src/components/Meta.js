@@ -4,7 +4,7 @@ import React from 'react'
 
 const Meta = ({
   title,
-  description,
+  description = title,
   locale = 'ja_JP',
   publishedAt,
   slug = title,
