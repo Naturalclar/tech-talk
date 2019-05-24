@@ -1,7 +1,14 @@
 import { docco } from 'react-syntax-highlighter/styles/hljs'
 import { CodeSurfer } from 'mdx-deck-code-surfer'
+import { Head } from 'mdx-deck'
 export { swiss as theme } from 'mdx-deck/themes'
-import { Layout } from '../components'
+import { Meta, Layout } from '../../components'
+
+<Head>
+  <Meta title="review-efficiently-with-artifact"
+  publishedAt={new Date()}
+  />
+</Head>
 
 <Layout>
 
@@ -63,7 +70,7 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 ### 毎回 Artifact を見に行くのは手間では？ :thinking_face:
 
-<img src="./assets/ci-artifact.png" height="400" width="80%" />
+<img src="../assets/ci-artifact.png" height="400" width="80%" />
 
 </Layout>
 
@@ -83,7 +90,7 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 <hr />
 
-<img src="./assets/artifact-report.png" height="180" />
+<img src="../assets/artifact-report.png" height="180" />
 
 - https://github.com/Naturalclar/klank
 - 指定パスの Artifact を PR に対してコメントする
@@ -105,7 +112,7 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 - config.yml で `store_Artifacts` する
 
-<img src="./assets/circleci_config.png" height="380" width="340" />
+<img src="../assets/circleci_config.png" height="380" width="340" />
 
 </Layout>
 
@@ -115,7 +122,7 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 - Project の環境変数に `CIRCLE_TOKEN`, `GITHUB_TOKEN` をいれる
 
-<img src="./assets/circleci_env.png" height="380" />
+<img src="../assets/circleci_env.png" height="380" />
 
 </Layout>
 
@@ -125,7 +132,7 @@ CircleCI ユーザーコミュニティミートアップ #3
 
 - npm scripts に Artifact のパスをいれる
 
-<img src="./assets/circleci_npm.png" height="280" width="400" />
+<img src="../assets/circleci_npm.png" height="280" width="400" />
 
 </Layout>
 
@@ -156,7 +163,7 @@ https://github.com/Naturalclar/expo-typescript-starter
 
 ### 自己紹介
 
-<img src="./assets/cat.jpg" height="150" width="150" />
+<img src="../assets/cat.jpg" height="150" width="150" />
 
 - Jesse Katsumata アメリカ人 :flag-us:
 - CureApp - React Native を使った医療系のアプリの開発

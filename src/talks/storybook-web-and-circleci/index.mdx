@@ -1,66 +1,73 @@
+import { Head } from 'mdx-deck'
 import { docco } from 'react-syntax-highlighter/styles/hljs'
+import { CodeSurfer } from 'mdx-deck-code-surfer'
+import { Meta } from '../../components'
 
-export { swiss as theme } from "mdx-deck/themes";
-
-export { CodeSurfer } from "mdx-deck-code-surfer";
+export { swiss as theme } from 'mdx-deck/themes'
 
 
-### React Native WebとStorybookによるアプリケーション開発の効率化
+<Head>
+  <Meta title="storybook-web-and-circleci"
+  publishedAt={new Date()}
+  />
+</Head>
+
+### React Native Web と Storybook によるアプリケーション開発の効率化
+
 - @natural_clar
 - RNstartup #2
-
 
 ---
 
 ### 自己紹介
 
-- Jesse Katsumata 
+- Jesse Katsumata
 - CureApp
-- React Nativeを使った治療アプリの開発
+- React Native を使った治療アプリの開発
 - アメリカ人 :flag-us:
 - Twitter: [@natural_clar](https://twitter.com/natural_clar)
 - Github: [@Naturalclar](https://github.com/Naturalclar)
 
-<img 
-  src={require("file-loader!../assets/cat.jpg")} 
-  width={'200'} 
-  style={{position:'absolute',top:'10%', right: '-70%'}}
+<img
+  src={require('file-loader!../assets/cat.jpg')}
+  width={'200'}
+  style={{ position: 'absolute', top: '10%', right: '-70%' }}
 />
 
 ---
 
-## storybookとは :book:
+## storybook とは :book:
 
-<img 
-  src={require("file-loader!../assets/storybook-logo.png")} 
-  width={'200'} 
-  style={{position:'absolute',top:'10%', right: '-170%'}}
+<img
+  src={require('file-loader!../assets/storybook-logo.png')}
+  width={'200'}
+  style={{ position: 'absolute', top: '10%', right: '-170%' }}
 />
 
 ---
 
-- Componentを表示して、見た目が期待通りであるかテストする為のツール
-- React, React-Native, Vue等いろんなライブラリで使える
+- Component を表示して、見た目が期待通りであるかテストする為のツール
+- React, React-Native, Vue 等いろんなライブラリで使える
 
 ---
 
-### react-native版のstorybook
+### react-native 版の storybook
 
 - `@storybook/react-native`
 
 ---
 
-### RN版Storybookの利点 :tada:
+### RN 版 Storybook の利点 :tada:
 
 - 実機での見た目の確認が行える
-- Expoアプリとしてデザイナーチームに共有できる
+- Expo アプリとしてデザイナーチームに共有できる
 
 ---
 
-### RN版Storybookの欠点 :rain_cloud:
+### RN 版 Storybook の欠点 :rain_cloud:
 
 - エミュレータの立ち上げに時間がかかる
-- Portを取られるので実行中、アプリの方の動作確認が行えない
+- Port を取られるので実行中、アプリの方の動作確認が行えない
 
 ---
 
@@ -72,42 +79,40 @@ export { CodeSurfer } from "mdx-deck-code-surfer";
 
 ---
 
-- react-native特有の`<View>`や`<Text>`等のコンポーネントをWebで表示させる
-- Twitter Liteで使用されている
+- react-native 特有の`<View>`や`<Text>`等のコンポーネントを Web で表示させる
+- Twitter Lite で使用されている
 
 ---
 
-### react-nativeのstorybookをwebで表示させる
+### react-native の storybook を web で表示させる
 
 ---
 
 - `.storybook`に`webpack.config.js`をいれる
-- aliasを使って`react-native`を`import`してる箇所を`react-native-web`に変換する
+- alias を使って`react-native`を`import`してる箇所を`react-native-web`に変換する
 - `@storybook/react`の方を使用
 
 ---
 
-import { CodeSurfer } from "mdx-deck-code-surfer"
-
 <CodeSurfer
   title="webpack.config.js"
-  code={require("!raw-loader!./webpack.js")}
+  code={require('!raw-loader!./webpack.js')}
   lang="javascript"
   showNumbers={false}
   dark={false}
   steps={[
-    { notes: ".storybookフォルダにいれる"},
-    { lines: [1], notes: "storybookのconfig"},
-    { range: [5, 7] , notes: "aliasの設定"},
+    { notes: '.storybookフォルダにいれる' },
+    { lines: [1], notes: 'storybookのconfig' },
+    { range: [5, 7], notes: 'aliasの設定' },
   ]}
 />
 
 ---
 
-## RN-Web版Storybookの利点
+## RN-Web 版 Storybook の利点
 
 - エミュレータの起動を待つ必要が無い
-- アプリとStorybookを同時に開ける
+- アプリと Storybook を同時に開ける
 - 静的サイトとして楽に共有できる！
 
 ---
@@ -118,26 +123,26 @@ import { CodeSurfer } from "mdx-deck-code-surfer"
 
 - CircleCI が持つ S3 に立てれるサイト
 - build-storybook でビルドした Storybook を格納させる
-- PRに自動的にURLを送るコメントを別途作成
+- PR に自動的に URL を送るコメントを別途作成
 
-<img src={require("file-loader!../assets/artifact-report.png")} width={'60%'} />
+<img src={require('file-loader!../assets/artifact-report.png')} width={'60%'} />
 
 ---
 
-<div style={{width: '80%', height: '80%'}}>
-<CodeSurfer
-  title="config.yml"
-  code={require("!raw-loader!./config.yml")}
-  lang="yml"
-  showNumbers={false}
-  dark
-  steps={[
-    { notes: "circleciのConfigファイル"},
-    { range: [1, 3], notes: "storybookの作成"},
-    { range: [4, 5] , notes: "artifactに設定"},
-    { range: [6, 8] , notes: "PRにコメントするスクリプト"},
-  ]}
-/>
+<div style={{ width: '80%', height: '80%' }}>
+  <CodeSurfer
+    title="config.yml"
+    code={require('!raw-loader!./config.yml')}
+    lang="yml"
+    showNumbers={false}
+    dark
+    steps={[
+      { notes: 'circleciのConfigファイル' },
+      { range: [1, 3], notes: 'storybookの作成' },
+      { range: [4, 5], notes: 'artifactに設定' },
+      { range: [6, 8], notes: 'PRにコメントするスクリプト' },
+    ]}
+  />
 </div>
 
 ---
@@ -154,14 +159,14 @@ import { CodeSurfer } from "mdx-deck-code-surfer"
 
 ---
 
-### Expoで使うにあたっての問題点
+### Expo で使うにあたっての問題点
 
 ---
 
 - `@expo/vector-icons` がそのまま使えない
-- React Nativeのライブラリに依存している
-- react-native-vector-iconsなら大丈夫そう
-- でも expo なので　react-native-vector-icons は使えない
+- React Native のライブラリに依存している
+- react-native-vector-icons なら大丈夫そう
+- でも expo なので　 react-native-vector-icons は使えない
 
 ---
 
@@ -169,13 +174,11 @@ Babel プラグイン作成してます
 
 `babel-plugin-expo-vector-icons-storybook`
 
-<img src={require("file-loader!../assets/astexplorer.png")} width={'80%'} />
+<img src={require('file-loader!../assets/astexplorer.png')} width={'80%'} />
 
 ---
 
 ### 露骨な宣伝
-
-
 
 <img 
   src={require("file-loader!../assets/cure-app-logo.png")} 

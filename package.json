@@ -3,9 +3,12 @@
     "start": "mdx-deck src/talks/review-efficiently-with-artifact.mdx",
     "clean": "rm -rf dist",
     "pdf": "mdx-deck pdf",
-    "build": "npm-run-all clean build:*",
-    "build:mdx": "mdx-deck build --no-html src/talks/review-efficiently-with-artifact.mdx",
-    "build:assets": "cp -R ./src/assets ./dist/assets",
+    "build": "ts-node ./scripts/generate-slides.ts src/talks",
+    "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
+    "build:mdx": "mdx-deck build",
+    "build:screenshot": "mdx-deck screenshot",
+    "build:index": "ts-node ./scripts/generate-index.ts",
+    "build:oembed": "ts-node ./scripts/generate-oembed.ts",
     "new": "scaffdog generate",
     "lint": "eslint ./src",
     "klank": "klank dist/index.html"
@@ -20,6 +23,9 @@
     "mdx-deck": "^1.8.2"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
+    "cpx": "^1.5.0",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
@@ -30,6 +36,8 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^1.17.0",
     "raw-loader": "^1.0.0",
-    "scaffdog": "^0.0.7"
+    "scaffdog": "^0.0.7",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.5"
   }
 }
