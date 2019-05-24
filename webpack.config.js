@@ -8,7 +8,7 @@ module.exports = {
     new MonacoWebpackPlugin({
       // syntax highlighter
       // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-      languages: ['javascript'],
+      languages: ['javascript', 'typescript', 'typescriptreact'],
     }),
   ],
 }

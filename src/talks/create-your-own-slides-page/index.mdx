@@ -86,7 +86,6 @@ import MonacoEditor from 'react-monaco-editor'
 ---
 
 ### Slide開いたまま即席でDemoが行える
-###（用意しているとは言ってない）
 
 <MonacoEditor
   width="800"
@@ -125,6 +124,49 @@ import MonacoEditor from 'react-monaco-editor'
 
 - 無料でホスティングできるサービス
 - `yarn build`で作成されたものがそのまま表示される
+
+---
+
+## 悩んだところ:thinking_face:
+
+- `mdx-deck build` で一つのスライドしか作れない‥
+- twitterに呟いた時にカードが表示されない‥
+
+---
+
+<CodeSurfer
+  title="generate-slides.ts"
+  code={require('!raw-loader!./generate-slides.ts')}
+  lang="typescript"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: '再帰的にmdx-deckをbuildするスクリプト' },
+    { range: [8,20], notes: '拡張子.mdxのファイルを探す' },
+    { range: [47, 50], notes: 'それぞれ別のフォルダでbuildする' },
+    { line: [57], notes: 'twitter card用の画像はscreenshotで取得できる' },
+  ]}
+/>
+
+---
+
+<CodeSurfer
+  title="Meta.tsx"
+  code={require('!raw-loader!./Meta.tsx')}
+  lang="typescriptreact"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: 'meta情報を作るComponent' },
+    { lines: [11], notes: 'twitter cardに必要な情報を追加' },
+    { range: [3, 9], notes: '各スライドにMeta情報を入れる' },
+  ]}
+/>
+
+
+---
+
+index はまだ作成途中‥
 
 ---
 
