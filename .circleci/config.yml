@@ -11,12 +11,6 @@ commands:
     steps:
       - checkout
       - run: ls package.json | xargs -n1 md5sum > deps.txt
-      - run: 
-          name: 'install typescript'
-          command: sudo yarn global add typescript
-      - run: 
-          name: 'install ts-node'
-          command: sudo yarn global add ts-node
 
 jobs:
   test:

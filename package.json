@@ -3,11 +3,11 @@
     "start": "mdx-deck src/talks/review-efficiently-with-artifact.mdx",
     "clean": "rm -rf dist",
     "pdf": "mdx-deck pdf",
-    "build": "./scripts/generate-slides.ts src/talks",
+    "build": "ts-node ./scripts/generate-slides.ts src/talks",
     "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
     "build:mdx": "mdx-deck build",
     "build:screenshot": "mdx-deck screenshot",
-    "build:index": "./scripts/generate-index.ts",
+    "build:index": "ts-node ./scripts/generate-index.ts",
     "new": "scaffdog generate",
     "lint": "eslint ./src",
     "klank": "klank dist/index.html"
@@ -36,6 +36,7 @@
     "prettier": "^1.17.0",
     "raw-loader": "^1.0.0",
     "scaffdog": "^0.0.7",
+    "ts-node": "^8.1.0",
     "typescript": "^3.4.5"
   }
 }
