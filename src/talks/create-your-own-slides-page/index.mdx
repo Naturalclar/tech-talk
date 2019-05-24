@@ -40,7 +40,7 @@ import MonacoEditor from 'react-monaco-editor'
 
 ---
 
-# mdx-deck
+# [mdx-deck]()
 
 ---
 
@@ -55,6 +55,21 @@ import MonacoEditor from 'react-monaco-editor'
 ---
 
 ## [CodeSurfer](https://github.com/pomber/code-surfer)
+
+---
+
+<CodeSurfer
+  title="helloworld.tsx"
+  code={require('!raw-loader!./helloworld.tsx')}
+  lang="typescriptreact"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: 'コードの紹介ができる' },
+    { lines: [1], notes: '行数にズームインもできる' },
+    { range: [5, 7], notes: 'コードの細かい部分を紹介するのに便利' },
+  ]}
+/>
 
 ---
 
