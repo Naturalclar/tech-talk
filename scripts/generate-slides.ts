@@ -55,8 +55,8 @@ const main = () => {
       }
     })
     execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
-    exec(`./scripts/generate-oembed.ts ${title} > ./dist/${title}/oembed.json`)
-    exec(`./scripts/generate-index.ts ${title}`, (err, stdout) => {
+    exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
+    exec(`yarn build:index ${title}`, (err, stdout) => {
       template = template.replace(
         '<!--REPLACE_ME-->',
         `${stdout}<!--REPLACE_ME-->`

@@ -8,6 +8,7 @@
     "build:mdx": "mdx-deck build",
     "build:screenshot": "mdx-deck screenshot",
     "build:index": "ts-node ./scripts/generate-index.ts",
+    "build:oembed": "ts-node ./scripts/generate-oembed.ts",
     "new": "scaffdog generate",
     "lint": "eslint ./src",
     "klank": "klank dist/index.html"
