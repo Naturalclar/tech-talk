@@ -25,7 +25,7 @@ const Meta = ({
         property="article:published_time"
         content={publishedAt.toISOString()}
       />
-      <meta property="article:author" content="Leko" />
+      <meta property="article:author" content="naturalclar" />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={title} />
       <meta
