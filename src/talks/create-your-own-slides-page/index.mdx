@@ -1,0 +1,116 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+import { CodeSurfer } from 'mdx-deck-code-surfer'
+import { Head } from 'mdx-deck'
+import { Meta } from '../../components'
+export { swiss as theme } from 'mdx-deck/themes'
+import MonacoEditor from 'react-monaco-editor'
+
+<Head>
+  <Meta
+    title="自分の登壇スライド用サイトを作ろう"
+    description="netlify, mdx-deck を使って自分の登壇資料をまとめるサイトを作る"
+    slug="create-your-own-slides-page"
+    publishedAt={new Date()}
+  />
+</Head>
+
+## 登壇スライドをサクッと作ってサイトにまとめよう
+
+- @naturalclar
+- [we are javascripters! @32nd](https://wajs.connpass.com/event/130865/)
+
+---
+
+## 自己紹介
+
+<img src="../assets/cat.jpg" height="250" />
+
+- Jesse Katsumata アメリカ人 :flag-us:
+- CureApp - React Native を使った治療アプリの開発
+- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+## 話すこと
+
+---
+
+- mdx-deckの紹介
+- 複数のmdxファイルを別々のスライドとして作成する
+
+---
+
+# mdx-deck
+
+---
+
+### mdx-deck
+
+- markdownでSlideがかける
+- jsxも組み込める
+- 様々なテーマがある
+- このスライドもmdx-deckで作っている
+- 豊富なプラグインがある
+
+---
+
+## [CodeSurfer](https://github.com/pomber/code-surfer)
+
+---
+
+## [MonacoEditor](https://microsoft.github.io/monaco-editor/)
+
+---
+
+### MonacoEditor
+
+- microsoft が提供している、vscode に内蔵されているエディタ
+- ブラウザ上で動かせるエディタを簡単に作れる
+- React 用には[react-monaco-editor](https://github.com/react-monaco-editor/react-monaco-editor)
+
+---
+
+### Slide開いたまま即席でDemoが行える
+###（用意しているとは言ってない）
+
+<MonacoEditor
+  width="800"
+  height="600"
+  language="javascript"
+  theme="vs-dark"
+  value={''}
+  options={{fontSize: 20}}
+  onChange={() => {}}
+  editorDidMount={() => {}}
+/>
+
+---
+
+## mdx-deck はいいぞ
+
+---
+
+### 問題点
+
+- slideshareとかにそのまま上げられない
+- pdf に変換することはできる
+- pdfに変換すると絵文字が消えたりプラグインが効かなかったりする
+
+---
+
+## 自分でホスティングしよう！
+
+---
+
+## [Netlify](https://www.netlify.com/)
+
+---
+
+### Netlify
+
+- 無料でホスティングできるサービス
+- `yarn build`で作成されたものがそのまま表示される
+
+---
+
+## ありがとうございました
