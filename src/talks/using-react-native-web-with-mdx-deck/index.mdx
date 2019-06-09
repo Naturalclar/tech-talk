@@ -1,0 +1,53 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+import { CodeSurfer } from "mdx-deck-code-surfer"
+import { Head } from 'mdx-deck'
+import { Page, Meta } from '../../components'
+import { View ,Text,StyleSheet } from 'react-native-web';
+export { swiss as theme } from "mdx-deck/themes";
+
+
+<Head>
+  <Meta 
+    title="using-react-native-web-with-mdx-deck"
+    description="using-react-native-web-with-mdx-deck"
+    slug="using-react-native-web-with-mdx-deck"
+    publishedAt={new Date("2019-06-09")}
+  />
+</Head>
+
+## using-react-native-web-with-mdx-deck
+
+---
+
+## 自己紹介
+
+<img src={require('file-loader!../assets/cat.jpg')} height="250" />
+
+
+- Jesse Katsumata アメリカ人 :flag-us:
+- CureApp - React Nativeを使った治療アプリの開発
+- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+## 話すこと
+
+---
+
+<Page>
+<View style={{backgroundColor:'aliceblue', flex:1,justifyContent:'center',alignItems:'center'}}>
+  <Text style={{fontSize: 36, fontWeight: 400}}>MDX Page Made with React Native Web</Text>
+</View>
+</Page>
+
+---
+
+### Import するだけだったわ
+
+```
+yarn add react-native-web
+```
+
+---
+
+## ありがとうございました
