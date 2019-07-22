@@ -46,7 +46,7 @@ export { dark as theme } from 'mdx-deck/themes'
 
 ## 買って数日後の現実
 
-- 音量調整にしか使わない…
+- 音楽再生と音量調整にしか使わない…
 
 <img src={require('file-loader!../assets/fusagikomu_businessman.png')} />
 
@@ -70,6 +70,23 @@ export { dark as theme } from 'mdx-deck/themes'
 
 ---
 
+<CodeSurfer
+  title="touchbar.ts"
+  code={require('!raw-loader!./touchbar.ts')}
+  lang="typescript"
+  showNumbers={false}
+  dark={false}
+  steps={[
+    { notes: '使い方は簡単！' },
+    { range: [1, 4], notes: 'importして' },
+    { range: [25, 33], notes: 'ボタンに何をするか設定して' },
+    { lines: [38], notes: 'Setするだけ！' },
+    { range: [8, 10], notes: 'HotKeyも設定できる！' },
+  ]}
+/>
+
+---
+
 ### Touchbar Shortcut
 
 - https://github.com/Naturalclar/tbs
@@ -82,6 +99,15 @@ export { dark as theme } from 'mdx-deck/themes'
 
 - ボタンで URL 開くだけ
 - ホットキーでどこからでも呼び出し可能
+
+---
+
+## 注意点
+
+- TouchBar が表示されるのはアプリを開いている間のみ
+- TouchBar の右側に常駐しているアイコンは[非公開](https://github.com/electron/electron/issues/12431) API で、Electron は提供していない
+
+<img src={require('file-loader!./github_issue.png')} width="100%" />
 
 ---
 
