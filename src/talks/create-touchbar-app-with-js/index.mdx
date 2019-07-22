@@ -1,0 +1,104 @@
+import { docco } from 'react-syntax-highlighter/styles/hljs'
+import { CodeSurfer } from 'mdx-deck-code-surfer'
+import { Head } from 'mdx-deck'
+import { Meta, Avatar } from '../../components'
+export { dark as theme } from 'mdx-deck/themes'
+
+<Head>
+  <Meta
+    title="create-touchbar-app-with-js"
+    description="create-touchbar-app-with-js"
+    slug="create-touchbar-app-with-js"
+    publishedAt={new Date('2019-07-22')}
+  />
+</Head>
+
+## JS で TouchBar のアプリを作ろう
+
+[We Are JavaScripters! @34th](https://wajs.connpass.com/event/138500)
+@natural_clar
+
+---
+
+## 自己紹介
+
+<Avatar />
+
+- Jesse Katsumata アメリカ人 :flag-us:
+- CureApp - React Native を使った治療アプリの開発
+- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+## TouchBar
+
+<img src={require('file-loader!../assets/touchbar.png')} width="100%" />
+
+---
+
+## MacBookPro を買ったきっかけ
+
+- 元々 Windows を使ってた
+- 友達に Touchbar を見せてもらった
+- なにこれかっこいい！
+
+---
+
+## 買って数日後の現実
+
+- 音量調整にしか使わない…
+
+<img src={require('file-loader!../assets/fusagikomu_businessman.png')} />
+
+---
+
+- どうにかして使えないか:thinking_face:
+- よく開くものだけでも表示させときたい
+- JS で書けたら書きたい
+
+---
+
+## Electron
+
+<img src={require('file-loader!../assets/electron.png')} />
+
+---
+
+### TouchBar API
+
+- https://electronjs.org/docs/api/touch-bar
+
+---
+
+### Touchbar Shortcut
+
+- https://github.com/Naturalclar/tbs
+
+<img src={require('file-loader!../assets/tbs.png')} width="100%" />
+
+---
+
+### Touchbar Shortcut
+
+- ボタンで URL 開くだけ
+- ホットキーでどこからでも呼び出し可能
+
+---
+
+## まとめ
+
+- 既存の Electron のアプリと合わせることも可能（そっちがメイン）
+- Touchbar 領域にフォーカスすれば、できることが少ないので、作りやすい
+- みんなで TouchBar 有効活用していこう
+
+---
+
+## 便利ツール/資料
+
+- [TouchBar Simulator](https://github.com/sindresorhus/touch-bar-simulator) : TouchBar の Simulator
+- [electron-store](https://github.com/sindresorhus/electron-store) : 状態管理ツール
+- [Keyboard Shortcut](https://electronjs.org/docs/tutorial/keyboard-shortcuts) : ホットキーの設定
+
+---
+
+## ありがとうございました

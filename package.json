@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "mdx-deck src/talks/using-react-native-web-with-mdx-deck/index.mdx",
+    "start": "mdx-deck src/talks/create-touchbar-app-with-js/index.mdx",
     "clean": "rm -rf dist",
     "pdf": "mdx-deck pdf",
     "build": "ts-node ./scripts/generate-slides.ts src/talks",
