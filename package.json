@@ -5,7 +5,7 @@
   "author": "jesse.katsumata@gmail.com",
   "main": "index.js",
   "scripts": {
-    "prepate": "tsc",
+    "prepare": "tsc",
     "build": "node ./bin/generate-slides.js src/talks",
     "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
     "build:index": "ts-node ./scripts/generate-index.ts",
