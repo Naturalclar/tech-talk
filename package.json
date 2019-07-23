@@ -13,7 +13,7 @@
     "build:screenshot": "mdx-deck screenshot",
     "clean": "rm -rf dist",
     "klank": "klank dist/index.html",
-    "lint": "eslint ./src",
+    "lint": "eslint ./src --ext .ts,.tsx",
     "new": "scaffdog generate",
     "pdf": "mdx-deck pdf",
     "start": "mdx-deck src/talks/create-touchbar-app-with-js/index.mdx"
