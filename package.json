@@ -1,23 +1,24 @@
 {
-  "scripts": {
-    "start": "mdx-deck src/talks/create-touchbar-app-with-js/index.mdx",
-    "clean": "rm -rf dist",
-    "pdf": "mdx-deck pdf",
-    "build": "ts-node ./scripts/generate-slides.ts src/talks",
-    "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
-    "build:mdx": "mdx-deck build",
-    "build:screenshot": "mdx-deck screenshot",
-    "build:index": "ts-node ./scripts/generate-index.ts",
-    "build:oembed": "ts-node ./scripts/generate-oembed.ts",
-    "new": "scaffdog generate",
-    "lint": "eslint ./src",
-    "klank": "klank dist/index.html"
-  },
   "name": "mdx-slide",
   "version": "1.0.0",
-  "main": "index.js",
-  "author": "jesse.katsumata@gmail.com",
   "license": "MIT",
+  "author": "jesse.katsumata@gmail.com",
+  "main": "index.js",
+  "scripts": {
+    "build:scripts": "tsc",
+    "build": "node ./bin/generate-slides.js src/talks",
+    "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
+    "build:index": "ts-node ./scripts/generate-index.ts",
+    "build:mdx": "mdx-deck build",
+    "build:oembed": "ts-node ./scripts/generate-oembed.ts",
+    "build:screenshot": "mdx-deck screenshot",
+    "clean": "rm -rf dist",
+    "klank": "klank dist/index.html",
+    "lint": "eslint ./src --ext .ts,.tsx",
+    "new": "scaffdog generate",
+    "pdf": "mdx-deck pdf",
+    "start": "mdx-deck src/talks/create-touchbar-app-with-js/index.mdx"
+  },
   "dependencies": {
     "mdx-code": "^1.1.3",
     "mdx-deck": "^1.8.2",
@@ -26,6 +27,8 @@
     "react-native-web": "^0.11.4"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.3.3",
+    "@babel/preset-react": "^7.0.0",
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.9.0",
     "cpx": "^1.5.0",
