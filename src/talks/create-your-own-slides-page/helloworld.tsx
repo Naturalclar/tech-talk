@@ -1,20 +1,20 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 
 type Props = {
-  foo: string,
+  foo: string
   bar: string
 }
 
-const HelloComponent = ({foo, bar}: Props ) => {
+const HelloComponent = ({ foo, bar }: Props) => {
   const [fizz, setFizz] = useState('buzz')
 
   return (
     <View>
       <Text>{fizz}</Text>
-      <TouchableOpacity onPress={handlePress} >
+      <TouchableOpacity onPress={handlePress}>
         <Text>Click Me!</Text>
-      </TouchableOpacity/>
+      </TouchableOpacity>
     </View>
   )
 }

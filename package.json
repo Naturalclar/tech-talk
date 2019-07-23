@@ -5,7 +5,8 @@
   "author": "jesse.katsumata@gmail.com",
   "main": "index.js",
   "scripts": {
-    "build": "ts-node ./scripts/generate-slides.ts src/talks",
+    "build:scripts": "tsc",
+    "build": "node ./bin/generate-slides.js src/talks",
     "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
     "build:index": "ts-node ./scripts/generate-index.ts",
     "build:mdx": "mdx-deck build",

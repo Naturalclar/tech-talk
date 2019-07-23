@@ -30,7 +30,10 @@ jobs:
           name: 'lint'
           command: yarn lint
       - run:
-          name: 'build'
+          name: 'Build Script Files'
+          command: yarn build:scripts
+      - run:
+          name: 'Build Website'
           command: yarn build
       - store_artifacts:
           path: ./dist
