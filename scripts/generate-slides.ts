@@ -54,7 +54,7 @@ const main = () => {
         exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
       }
     })
-    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
+    //execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
     exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
     exec(`yarn build:index ${title}`, (err, stdout) => {
       template = template.replace(
