@@ -21,17 +21,16 @@ jobs:
       - restore_cache:
           keys:
             - v{{ .Environment.CIRCLECI_CACHE_VERSION }}-dependencies-{{ .Branch }}-{{ checksum "deps.txt" }}
-      - run: yarn
+      - run:
+          name: 'Install Dependencies'
+          command: yarn
       - save_cache:
           paths:
             - node_modules
           key: v{{ .Environment.CIRCLECI_CACHE_VERSION }}-dependencies-{{ .Branch }}-{{ checksum "deps.txt" }}
       - run:
-          name: 'lint'
+          name: 'Apply Lint'
           command: yarn lint
-      - run:
-          name: 'Build Script Files'
-          command: yarn build:scripts
       - run:
           name: 'Build Website'
           command: yarn build
