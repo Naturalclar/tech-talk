@@ -36,7 +36,7 @@ There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` →
 
 **Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error. `mdx-deck` still drags puppeteer in as a transitive dependency, but its 2019 Chromium is deliberately never downloaded — pnpm blocks the postinstall and nothing allows it. The one casualty is `pnpm run pdf` (`mdx-deck pdf`), which needs that Chromium; run `pnpm rebuild puppeteer` first if you ever want it.
 
-Rendering CJK text needs fonts in the environment doing the rendering. A machine with no Japanese font produces thumbnails full of tofu boxes rather than titles; `playwright install --with-deps` pulls in `fonts-ipafont-gothic`, which covers it on CI.
+**The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; Netlify builds the deployed site and takes no system packages, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that *includes* `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
 
 ### Calling scripts from `generate-slides.ts`
 
