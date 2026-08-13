@@ -27,7 +27,11 @@ npx mdx-deck src/talks/<slug>/index.mdx
 
 The remaining `build:*` scripts (`build:mdx`, `build:screenshot`, `build:oembed`, `build:index`, `build:assets`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
 
-There is no test suite. CI (`.circleci/config.yml`) runs `yarn lint` → `yarn build`, stores `dist/` as an artifact, then `yarn klank` to post the artifact link back to the PR.
+There is no test suite. CI (`.github/workflows/ci.yml`) runs `yarn lint` → `yarn build` on Node 22 and uploads `dist/` as an artifact.
+
+**`yarn build` requires `NODE_OPTIONS=--openssl-legacy-provider` on Node 17+.** webpack 4 hashes with md4, which OpenSSL 3 refuses; without the flag the build dies with `ERR_OSSL_EVP_UNSUPPORTED`. CI sets it on the build step.
+
+`build:screenshot` passes `--no-sandbox` so the Chromium that puppeteer 1.13 bundles can launch as root and inside containers. That Chromium is from 2019 and needs the pre-t64 shared libraries (`libasound2`, `libatk1.0-0`, `libxss1`, …), which is why CI pins `ubuntu-22.04` rather than `ubuntu-latest`.
 
 ## Architecture
 
@@ -53,7 +57,7 @@ Walks `src/talks` recursively for `.mdx` files and, per deck:
 
 Finally it copies `src/talks/assets/**` and `src/_redirects` into `dist/`.
 
-Because steps 1, 3, and 4 use async `exec` inside a `forEach`, the build is racy by construction — the index HTML is rewritten from a shared `template` variable in overlapping callbacks. Treat intermittent missing cards or partial output as a known property of this pipeline, not necessarily a new bug.
+Because steps 1, 3, and 4 use async `exec` inside a `forEach`, the build is racy by construction — the index HTML is rewritten from a shared `template` variable in overlapping callbacks. Treat intermittent missing cards or partial output as a known property of this pipeline, not necessarily a new bug. Observed on a clean build: all 8 cards make it into `index.html`, but only about half the decks end up with an `oembed.json`, because step 3 writes into a directory that step 1 is still recreating.
 
 The hardcoded domain `https://slides.naturalclar.dev` appears in both `scripts/generate-oembed.ts` and `src/components/Meta.tsx`; change both together.
 
@@ -87,4 +91,4 @@ Prettier: no semicolons, single quotes, 2-space tabs, ES5 trailing commas. `reac
 
 ## Dependency situation
 
-This project is pinned to an old stack: mdx-deck v1, ESLint 5, TypeScript 3.4, and CI on Node 8. Upgrading any one of these is a breaking change to the deck syntax or build pipeline — don't casually bump versions while making unrelated changes.
+This project is pinned to an old stack: mdx-deck v1, ESLint 5, TypeScript 3.4, webpack 4. The dependencies still install and build under Node 22, but only with the OpenSSL workaround above. Upgrading any one of them is a breaking change to the deck syntax or build pipeline — don't casually bump versions while making unrelated changes.
