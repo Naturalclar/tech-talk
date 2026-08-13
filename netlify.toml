@@ -8,8 +8,11 @@
 # that OpenSSL 3 rejects, so NODE_OPTIONS carries the same legacy-provider
 # flag the CI build step sets.
 
+# The build screenshots every deck, so it needs playwright's browser. Unlike
+# CI this cannot use --with-deps, which installs system packages and wants
+# sudo; the image already carries the shared libraries Chromium needs.
 [build]
-  command = "pnpm run build"
+  command = "pnpm exec playwright install chromium && pnpm run build"
   publish = "dist"
 
 [build.environment]
