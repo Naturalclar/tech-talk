@@ -2,6 +2,7 @@
 
 import fs from 'fs'
 import http from 'http'
+import os from 'os'
 import path from 'path'
 
 // playwright's type definitions target a much newer TypeScript than the 3.4
@@ -13,6 +14,37 @@ const WIDTH = 1280
 const HEIGHT = 720
 
 const distDir = path.join(__dirname, '..', 'dist')
+const fontsDir = path.join(__dirname, '..', 'fonts')
+
+// Nearly every deck title is Japanese, and a machine with no Japanese font
+// renders those titles as tofu boxes. Rather than rely on the build image
+// having one — Netlify's cannot be given system packages — the repository
+// carries IPAGothic and fontconfig is pointed at it here.
+//
+// The system configuration is included rather than replaced. Listing font
+// directories alone would drop the distribution's family aliases with them,
+// and sans-serif would start resolving to IPAGothic's Latin glyphs instead of
+// whatever it picks today. Adding one directory on top leaves that untouched:
+// the bundled font is only reached for glyphs nothing else provides.
+const useBundledFonts = (): void => {
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fontconfig-'))
+  const configPath = path.join(cacheDir, 'fonts.conf')
+
+  fs.writeFileSync(
+    configPath,
+    `<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <include ignore_missing="yes">/etc/fonts/fonts.conf</include>
+  <dir>${fontsDir}</dir>
+  <cachedir>${cacheDir}</cachedir>
+</fontconfig>
+`,
+    'utf8'
+  )
+
+  process.env.FONTCONFIG_FILE = configPath
+}
 
 const MIME: { [ext: string]: string } = {
   '.css': 'text/css; charset=utf-8',
@@ -95,6 +127,8 @@ const main = async () => {
     process.exitCode = 1
     return
   }
+
+  useBundledFonts()
 
   const server = await startServer()
   // Chromium's sandbox is unavailable when the build runs as root or inside a
