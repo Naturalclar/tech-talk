@@ -1,0 +1,17 @@
+# Netlify reads its build settings from here rather than the dashboard UI.
+#
+# NODE_VERSION matters: pnpm 10 (pinned via packageManager in package.json)
+# requires Node >= 18.12, and the deploy started failing after the pnpm
+# migration on the image's older default. 22 matches what CI runs.
+#
+# Moving to a current Node then reintroduces the webpack 4 md4 hash problem
+# that OpenSSL 3 rejects, so NODE_OPTIONS carries the same legacy-provider
+# flag the CI build step sets.
+
+[build]
+  command = "pnpm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_OPTIONS = "--openssl-legacy-provider"
