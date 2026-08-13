@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    # Pinned to 22.04 rather than ubuntu-latest: the bundled Chromium that
+    # puppeteer 1.13 downloads for `mdx-deck screenshot` needs the pre-t64
+    # library names (libasound2, libatk1.0-0, ...), which 24.04 renamed.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Install Chromium shared libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2 \
+            libatk-bridge2.0-0 \
+            libatk1.0-0 \
+            libcups2 \
+            libgbm1 \
+            libgtk-3-0 \
+            libnspr4 \
+            libnss3 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libxss1 \
+            libxtst6
+
+      # `yarn install` also runs the `prepare` script (tsc), which is what
+      # compiles scripts/ into the gitignored bin/ that `yarn build` executes.
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      # webpack 4 hashes with md4, which OpenSSL 3 (Node 17+) refuses without
+      # the legacy provider.
+      - name: Build
+        run: yarn build
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slides
+          path: dist
