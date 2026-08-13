@@ -67,12 +67,21 @@ Walks `src/talks` recursively for `.mdx` files, then runs these stages. Everythi
 1. Wipe `dist/`, then copy `src/talks/assets/**` and `src/_redirects` into it. **Assets go first** — decks reference shared images as plain `../assets/*` paths, which only resolve once `dist/assets` exists, and the screenshots in stage 3 would otherwise capture broken images.
 2. `mdx-deck build` → `dist/<slug>/`, all decks in parallel. If a deck errors, `buildDeck` wipes that folder and retries with `--no-html` (several decks fail static HTML generation; the no-html fallback is the escape hatch). A deck whose fallback also fails is dropped from the remaining stages and makes the build exit non-zero.
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
-4. `generate-oembed.ts <slug>` → `dist/<slug>/oembed.json`.
-5. `generate-index.ts <slug>` emits a Bootstrap card `<div>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+4. `generate-meta.ts <slug> <mdx>` injects OG/Twitter/oEmbed tags into `dist/<slug>/index.html`, but only when the markup has none — see below.
+5. `generate-oembed.ts <slug> <mdx>` → `dist/<slug>/oembed.json`.
+6. `generate-index.ts <slug>` emits a Bootstrap card `<div>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
 
-**Stages 3–5 must not start before stage 2 has settled for that deck.** The `--no-html` retry deletes `dist/<slug>/` wholesale, so anything written there earlier goes with it — that is what used to leave half the decks without an `oembed.json`.
+**Stages 3–6 must not start before stage 2 has settled for that deck.** The `--no-html` retry deletes `dist/<slug>/` wholesale, so anything written there earlier goes with it — that is what used to leave half the decks without an `oembed.json`.
 
-The hardcoded domain `https://slides.naturalclar.dev` appears in both `scripts/generate-oembed.ts` and `src/components/Meta.tsx`; change both together.
+### `<CodeSurfer>` decks cannot be server rendered
+
+Any deck that renders a `<CodeSurfer>` slide fails `mdx-deck build` and falls back to `--no-html`. The component reads mdx-deck's deck context, which is null under `renderToString`; guarding one access just moves the crash to the next one, so treat this as a property of `mdx-deck-code-surfer` rather than something to fix in the deck. Four of the eight decks are in this state, and `create-your-own-slides-page` additionally trips over Node trying to import Monaco's `.css`.
+
+The consequence is that their static markup contains no `<Head>` output at all — no title, no OG tags, no oEmbed link. `generate-meta.ts` exists for that reason: it parses the `<Meta />` props straight out of the MDX (`scripts/deck-meta.ts`) and writes the tags into the built HTML, so metadata does not depend on SSR working. It skips decks whose markup already has `og:image`, which is how server rendered decks avoid getting a duplicate set.
+
+That parser is also what gives `oembed.json` its title. Because it reads what the deck declares, a deck whose `<Meta title>` is just its slug gets a slug for a title — the fix for that is in the decks, not here.
+
+The published origin lives in `scripts/site.ts` for everything under `scripts/`, but `src/components/Meta.tsx` hardcodes it separately for the client-side render; change both together.
 
 ### Deck authoring conventions
 
