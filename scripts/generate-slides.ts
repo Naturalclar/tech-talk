@@ -38,8 +38,8 @@ const main = () => {
   })
 
   // clean
-  exec(`yarn rimraf ./dist`)
-  exec(`yarn cpx ./src/assets ./dist/assets`)
+  exec(`pnpm exec rimraf ./dist`)
+  exec(`pnpm exec cpx ./src/assets ./dist/assets`)
   let template = fs.readFileSync(
     path.join(__dirname, '..', 'src', 'index.html'),
     'utf8'
@@ -47,16 +47,19 @@ const main = () => {
   mdxs.forEach(mdx => {
     const title = getTitle(mdx)
     // build mdx files to separate folders
-    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
+    exec(`pnpm run build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
       if (err) {
         // if error is caught, clean and rebuild with no-html flag
-        exec(`yarn rimraf ./dist/${title}`)
-        exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+        exec(`pnpm exec rimraf ./dist/${title}`)
+        exec(`pnpm run build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
       }
     })
-    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
-    exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
-    exec(`yarn build:index ${title}`, (err, stdout) => {
+    execSync(`pnpm run build:screenshot ${mdx} --out-file ${title}.png`)
+    // --silent keeps pnpm's own banner out of the redirected stdout
+    exec(
+      `pnpm run --silent build:oembed ${title} > ./dist/${title}/oembed.json`
+    )
+    exec(`pnpm run --silent build:index ${title}`, (err, stdout) => {
       template = template.replace(
         '<!--REPLACE_ME-->',
         `${stdout}<!--REPLACE_ME-->`
@@ -69,7 +72,7 @@ const main = () => {
     })
   })
   // move all assets to dist
-  exec(`yarn build:assets`)
-  exec(`yarn cpx ./src/_redirects ./dist`)
+  exec(`pnpm run build:assets`)
+  exec(`pnpm exec cpx ./src/_redirects ./dist`)
 }
 main()
