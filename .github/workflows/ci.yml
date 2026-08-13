@@ -8,10 +8,7 @@ on:
 
 jobs:
   build:
-    # Pinned to 22.04 rather than ubuntu-latest: the bundled Chromium that
-    # puppeteer 1.13 downloads for `mdx-deck screenshot` needs the pre-t64
-    # library names (libasound2, libatk1.0-0, ...), which 24.04 renamed.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -24,29 +21,15 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install Chromium shared libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libasound2 \
-            libatk-bridge2.0-0 \
-            libatk1.0-0 \
-            libcups2 \
-            libgbm1 \
-            libgtk-3-0 \
-            libnspr4 \
-            libnss3 \
-            libxcomposite1 \
-            libxdamage1 \
-            libxfixes3 \
-            libxrandr2 \
-            libxss1 \
-            libxtst6
-
       # `pnpm install` also runs the `prepare` script (tsc), which is what
       # compiles scripts/ into the gitignored bin/ that `pnpm build` executes.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # --with-deps installs the browser's system libraries too, which is what
+      # lets this job track ubuntu-latest instead of pinning an older image.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Lint
         run: pnpm run lint

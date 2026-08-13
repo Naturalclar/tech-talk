@@ -2,7 +2,18 @@
 
 import fs from 'fs'
 import path from 'path'
-import { exec, execSync } from 'child_process'
+import { exec } from 'child_process'
+
+const run = (cmd: string): Promise<string> =>
+  new Promise((resolve, reject) => {
+    exec(cmd, { maxBuffer: 32 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) {
+        reject(new Error(`${cmd}\n${stderr}`))
+        return
+      }
+      resolve(stdout)
+    })
+  })
 
 // recursively get files of given path
 const listDir = (dir: string, list: string[] = []): string[] => {
@@ -24,7 +35,20 @@ const getTitle = (dir: string): string => {
   return path.basename(path.dirname(dir))
 }
 
-const main = () => {
+// Some decks fail mdx-deck's static html generation, so they are rebuilt
+// without it. The retry wipes the output directory first, which is why
+// nothing else may write into dist/<slug> until this has finished.
+const buildDeck = async (mdx: string, slug: string): Promise<void> => {
+  try {
+    await run(`pnpm run build:mdx ${mdx} --out-dir ./dist/${slug}`)
+  } catch (err) {
+    console.log(`[build] ${slug}: static html failed, retrying with --no-html`)
+    await run(`pnpm exec rimraf ./dist/${slug}`)
+    await run(`pnpm run build:mdx --no-html ${mdx} --out-dir ./dist/${slug}`)
+  }
+}
+
+const main = async () => {
   if (process.argv.length < 3) {
     console.log('usage: ./generate-slides [dirname]')
     return
@@ -33,46 +57,66 @@ const main = () => {
   const dirname = process.argv[2]
 
   // filter files that ends with .mdx
-  const mdxs = listDir(dirname).filter(file => {
-    return path.extname(file) === '.mdx'
-  })
+  const decks = listDir(dirname)
+    .filter(file => path.extname(file) === '.mdx')
+    .map(mdx => ({ mdx, slug: getTitle(mdx) }))
 
-  // clean
-  exec(`pnpm exec rimraf ./dist`)
-  exec(`pnpm exec cpx ./src/assets ./dist/assets`)
-  let template = fs.readFileSync(
+  await run(`pnpm exec rimraf ./dist`)
+
+  // Assets go in before the screenshots: decks reference shared images as
+  // plain ../assets/* paths, which only resolve once dist/assets exists.
+  await run(`pnpm run build:assets`)
+  await run(`pnpm exec cpx ./src/_redirects ./dist`)
+
+  const failed: string[] = []
+  await Promise.all(
+    decks.map(async deck => {
+      try {
+        await buildDeck(deck.mdx, deck.slug)
+      } catch (err) {
+        console.error(`[build] ${deck.slug} failed\n${err.message}`)
+        failed.push(deck.slug)
+      }
+    })
+  )
+
+  const built = decks.filter(deck => failed.indexOf(deck.slug) === -1)
+
+  // One process for every deck: it starts a single browser and serves dist/
+  // once, instead of paying that cost per slide.
+  await run(
+    `pnpm run build:screenshot ${built.map(deck => deck.slug).join(' ')}`
+  )
+
+  await Promise.all(
+    built.map(deck =>
+      run(
+        `pnpm run --silent build:oembed ${deck.slug} > ./dist/${deck.slug}/oembed.json`
+      )
+    )
+  )
+
+  const cards = await Promise.all(
+    built.map(deck => run(`pnpm run --silent build:index ${deck.slug}`))
+  )
+
+  const template = fs.readFileSync(
     path.join(__dirname, '..', 'src', 'index.html'),
     'utf8'
   )
-  mdxs.forEach(mdx => {
-    const title = getTitle(mdx)
-    // build mdx files to separate folders
-    exec(`pnpm run build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
-      if (err) {
-        // if error is caught, clean and rebuild with no-html flag
-        exec(`pnpm exec rimraf ./dist/${title}`)
-        exec(`pnpm run build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
-      }
-    })
-    execSync(`pnpm run build:screenshot ${mdx} --out-file ${title}.png`)
-    // --silent keeps pnpm's own banner out of the redirected stdout
-    exec(
-      `pnpm run --silent build:oembed ${title} > ./dist/${title}/oembed.json`
-    )
-    exec(`pnpm run --silent build:index ${title}`, (err, stdout) => {
-      template = template.replace(
-        '<!--REPLACE_ME-->',
-        `${stdout}<!--REPLACE_ME-->`
-      )
-      fs.writeFileSync(
-        path.join(__dirname, '..', 'dist', 'index.html'),
-        template,
-        'utf8'
-      )
-    })
-  })
-  // move all assets to dist
-  exec(`pnpm run build:assets`)
-  exec(`pnpm exec cpx ./src/_redirects ./dist`)
+  fs.writeFileSync(
+    path.join(__dirname, '..', 'dist', 'index.html'),
+    template.replace('<!--REPLACE_ME-->', cards.join('')),
+    'utf8'
+  )
+
+  if (failed.length) {
+    console.error(`[build] ${failed.length} deck(s) failed: ${failed.join(', ')}`)
+    process.exitCode = 1
+  }
 }
-main()
+
+main().catch(err => {
+  console.error(err.message)
+  process.exitCode = 1
+})

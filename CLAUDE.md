@@ -34,13 +34,15 @@ There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` →
 
 **`pnpm run build` requires `NODE_OPTIONS=--openssl-legacy-provider` on Node 17+.** webpack 4 hashes with md4, which OpenSSL 3 refuses; without the flag the build dies with `ERR_OSSL_EVP_UNSUPPORTED`. CI sets it on the build step.
 
-`build:screenshot` passes `--no-sandbox` so the Chromium that puppeteer 1.13 bundles can launch as root and inside containers. That Chromium is from 2019 and needs the pre-t64 shared libraries (`libasound2`, `libatk1.0-0`, `libxss1`, …), which is why CI pins `ubuntu-22.04` rather than `ubuntu-latest`. Downloading it depends on puppeteer's postinstall, which pnpm 10 blocks unless the package is listed under `pnpm.onlyBuiltDependencies` in `package.json` — if screenshots start failing with a missing Chromium, check that list first.
+**Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error. `mdx-deck` still drags puppeteer in as a transitive dependency, but its 2019 Chromium is deliberately never downloaded — pnpm blocks the postinstall and nothing allows it. The one casualty is `pnpm run pdf` (`mdx-deck pdf`), which needs that Chromium; run `pnpm rebuild puppeteer` first if you ever want it.
+
+Rendering CJK text needs fonts in the environment doing the rendering. A machine with no Japanese font produces thumbnails full of tofu boxes rather than titles; `playwright install --with-deps` pulls in `fonts-ipafont-gothic`, which covers it on CI.
 
 ### Calling scripts from `generate-slides.ts`
 
 The orchestrator shells out to the other npm-scripts. Two rules that are easy to get wrong:
 
-- **Never insert `--` before the arguments.** pnpm forwards the literal `--` into the script, and `mdx-deck` then treats it as a positional argument, silently ignoring `--out-dir`/`--out-file` and dumping every deck into `dist/` root. Write `pnpm run build:mdx <file> --out-dir <dir>`; flags forward fine without a separator.
+- **Never insert `--` before the arguments.** pnpm forwards the literal `--` into the script, and `mdx-deck` then treats it as a positional argument, silently ignoring `--out-dir` and dumping every deck into `dist/` root. Write `pnpm run build:mdx <file> --out-dir <dir>`; flags forward fine without a separator.
 - **Use `pnpm run --silent` when the output is redirected.** `build:oembed` writes to `dist/<slug>/oembed.json` via shell redirection, and without `--silent` pnpm's `> pkg@version script` banner lands inside the JSON.
 
 Binaries that aren't wrapped in a script (`rimraf`, `cpx`) are invoked with `pnpm exec`.
@@ -60,16 +62,15 @@ If the `slug` prop in the MDX doesn't match the folder name, the OG image, oEmbe
 
 ### Build pipeline (`scripts/generate-slides.ts`)
 
-Walks `src/talks` recursively for `.mdx` files and, per deck:
+Walks `src/talks` recursively for `.mdx` files, then runs these stages. Everything is `async`/`await` over promisified `exec`, and the ordering between stages is load-bearing:
 
-1. `mdx-deck build` → `dist/<slug>/`. If it errors, it wipes that folder and retries with `--no-html` (some decks fail SSR/static HTML generation; the no-html fallback is the escape hatch).
-2. `mdx-deck screenshot` → `<slug>.png` (the only `execSync` step — the rest are fire-and-forget `exec`).
-3. `generate-oembed.ts <slug>` → `dist/<slug>/oembed.json`.
-4. `generate-index.ts <slug>` emits a Bootstrap card `<div>`; the parent script splices it into `src/index.html` by replacing the `<!--REPLACE_ME-->` marker with `card + <!--REPLACE_ME-->`, keeping the marker so subsequent decks append. Result is written to `dist/index.html`.
+1. Wipe `dist/`, then copy `src/talks/assets/**` and `src/_redirects` into it. **Assets go first** — decks reference shared images as plain `../assets/*` paths, which only resolve once `dist/assets` exists, and the screenshots in stage 3 would otherwise capture broken images.
+2. `mdx-deck build` → `dist/<slug>/`, all decks in parallel. If a deck errors, `buildDeck` wipes that folder and retries with `--no-html` (several decks fail static HTML generation; the no-html fallback is the escape hatch). A deck whose fallback also fails is dropped from the remaining stages and makes the build exit non-zero.
+3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
+4. `generate-oembed.ts <slug>` → `dist/<slug>/oembed.json`.
+5. `generate-index.ts <slug>` emits a Bootstrap card `<div>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
 
-Finally it copies `src/talks/assets/**` and `src/_redirects` into `dist/`.
-
-Because steps 1, 3, and 4 use async `exec` inside a `forEach`, the build is racy by construction — the index HTML is rewritten from a shared `template` variable in overlapping callbacks. Treat intermittent missing cards or partial output as a known property of this pipeline, not necessarily a new bug. Observed on a clean build: all 8 cards make it into `index.html`, but only about half the decks end up with an `oembed.json`, because step 3 writes into a directory that step 1 is still recreating.
+**Stages 3–5 must not start before stage 2 has settled for that deck.** The `--no-html` retry deletes `dist/<slug>/` wholesale, so anything written there earlier goes with it — that is what used to leave half the decks without an `oembed.json`.
 
 The hardcoded domain `https://slides.naturalclar.dev` appears in both `scripts/generate-oembed.ts` and `src/components/Meta.tsx`; change both together.
 
