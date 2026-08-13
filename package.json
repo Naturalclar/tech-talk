@@ -11,6 +11,7 @@
     "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
     "build:index": "ts-node ./scripts/generate-index.ts",
     "build:mdx": "mdx-deck build",
+    "build:meta": "ts-node ./scripts/generate-meta.ts",
     "build:oembed": "ts-node ./scripts/generate-oembed.ts",
     "build:screenshot": "ts-node ./scripts/generate-screenshot.ts",
     "clean": "rm -rf dist",

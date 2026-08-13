@@ -88,10 +88,18 @@ const main = async () => {
     `pnpm run build:screenshot ${built.map(deck => deck.slug).join(' ')}`
   )
 
+  // Decks that fell back to --no-html have no metadata in their markup at
+  // all, so it is written in here rather than left to the render.
+  await Promise.all(
+    built.map(deck =>
+      run(`pnpm run --silent build:meta ${deck.slug} ${deck.mdx}`)
+    )
+  )
+
   await Promise.all(
     built.map(deck =>
       run(
-        `pnpm run --silent build:oembed ${deck.slug} > ./dist/${deck.slug}/oembed.json`
+        `pnpm run --silent build:oembed ${deck.slug} ${deck.mdx} > ./dist/${deck.slug}/oembed.json`
       )
     )
   )
