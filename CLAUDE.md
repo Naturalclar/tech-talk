@@ -15,7 +15,7 @@ pnpm install              # also runs prepare (tsc)
 pnpm run prepare          # tsc: compiles scripts/*.ts -> bin/*.js (bin/ is gitignored)
 pnpm run build            # runs ./bin/generate-slides.js src/talks — full site build into dist/
 pnpm run lint             # eslint ./src --ext .ts,.tsx
-pnpm run new              # scaffdog: scaffold a new talk from .scaffdog/template.md
+pnpm run new              # scaffdog: scaffold src/talks/<slug>/index.mdx, asking for slug, title and date
 pnpm start                # dev server — HARDCODED to src/talks/create-touchbar-app-with-js/index.mdx
 pnpm run clean            # rm -rf dist
 ```

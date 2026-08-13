@@ -1,13 +1,14 @@
 ---
 name: 'new-slide'
-description: 'Create new slide'
-message: 'Enter Title of your Slide'
-root: './src'
-output: '**/*'
-ignore: []
+root: './src/talks'
+output: '.'
+questions:
+  slug: 'Enter the slug of your slide (lowercase, hyphen separated)'
+  title: 'Enter the title of your slide'
+  publishedAt: 'Enter the date you present it (YYYY-MM-DD)'
 ---
 
-# `{{ input }}/index.mdx`
+# `{{ inputs.slug }}/index.mdx`
 
 ```md
 import { docco } from 'react-syntax-highlighter/styles/hljs'
@@ -17,15 +18,15 @@ import { Meta } from '../../components'
 export { swiss as theme } from "mdx-deck/themes";
 
 <Head>
-  <Meta 
-    title="{{ input }}"
-    description="{{ input }}"
-    slug="{{ input }}"
-    publishedAt={new Date()}
+  <Meta
+    title="{{ inputs.title }}"
+    description="{{ inputs.title }}"
+    slug="{{ inputs.slug }}"
+    publishedAt={new Date("{{ inputs.publishedAt }}")}
   />
 </Head>
 
-## {{ input }}
+## {{ inputs.title }}
 
 ---
 
