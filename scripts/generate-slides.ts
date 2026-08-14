@@ -22,7 +22,7 @@ const run = (cmd: string): Promise<string> =>
 const listDir = (dir: string, list: string[] = []): string[] => {
   let fileList = list
   const files = fs.readdirSync(dir)
-  files.forEach(file => {
+  files.forEach((file) => {
     const dirPath = path.join(dir, file)
     if (fs.statSync(dirPath).isDirectory()) {
       fileList = listDir(dirPath, fileList)
@@ -44,7 +44,10 @@ const getTitle = (dir: string): string => {
 const buildDeck = async (mdx: string, slug: string): Promise<void> => {
   try {
     await run(`pnpm run build:mdx ${mdx} --out-dir ./dist/${slug}`)
-  } catch (err) {
+  } catch {
+    // The error itself is not worth printing: every deck that lands here does
+    // so for a reason we already know about, and the stack is a wall of
+    // webpack frames. Which decks fell back is the useful part.
     console.log(`[build] ${slug}: static html failed, retrying with --no-html`)
     await run(`pnpm exec rimraf ./dist/${slug}`)
     await run(`pnpm run build:mdx --no-html ${mdx} --out-dir ./dist/${slug}`)
@@ -61,8 +64,8 @@ const main = async () => {
 
   // filter files that ends with .mdx
   const decks = listDir(dirname)
-    .filter(file => path.extname(file) === '.mdx')
-    .map(mdx => ({ mdx, slug: getTitle(mdx) }))
+    .filter((file) => path.extname(file) === '.mdx')
+    .map((mdx) => ({ mdx, slug: getTitle(mdx) }))
 
   // The folder name is the slug the build writes everything under, while the
   // deck declares its own copy for <Meta> to render URLs from. Nothing keeps
@@ -70,7 +73,7 @@ const main = async () => {
   // the OG image, oEmbed link and canonical URL end up pointing at files that
   // were never written. Refuse to build instead.
   const mismatched = decks
-    .map(deck => ({ deck, meta: parseMeta(deck.mdx, deck.slug) }))
+    .map((deck) => ({ deck, meta: parseMeta(deck.mdx, deck.slug) }))
     .filter(({ deck, meta }) => meta.declaredSlug !== deck.slug)
   if (mismatched.length) {
     mismatched.forEach(({ deck, meta }) => {
@@ -97,7 +100,7 @@ const main = async () => {
 
   const failed: string[] = []
   await Promise.all(
-    decks.map(async deck => {
+    decks.map(async (deck) => {
       try {
         await buildDeck(deck.mdx, deck.slug)
       } catch (err) {
@@ -107,24 +110,24 @@ const main = async () => {
     })
   )
 
-  const built = decks.filter(deck => failed.indexOf(deck.slug) === -1)
+  const built = decks.filter((deck) => failed.indexOf(deck.slug) === -1)
 
   // One process for every deck: it starts a single browser and serves dist/
   // once, instead of paying that cost per slide.
   await run(
-    `pnpm run build:screenshot ${built.map(deck => deck.slug).join(' ')}`
+    `pnpm run build:screenshot ${built.map((deck) => deck.slug).join(' ')}`
   )
 
   // Decks that fell back to --no-html have no metadata in their markup at
   // all, so it is written in here rather than left to the render.
   await Promise.all(
-    built.map(deck =>
+    built.map((deck) =>
       run(`pnpm run --silent build:meta ${deck.slug} ${deck.mdx}`)
     )
   )
 
   await Promise.all(
-    built.map(deck =>
+    built.map((deck) =>
       run(
         `pnpm run --silent build:oembed ${deck.slug} ${deck.mdx} > ./dist/${deck.slug}/oembed.json`
       )
@@ -132,7 +135,7 @@ const main = async () => {
   )
 
   const cards = await Promise.all(
-    built.map(deck =>
+    built.map((deck) =>
       run(`pnpm run --silent build:index ${deck.slug} ${deck.mdx}`)
     )
   )
@@ -140,7 +143,7 @@ const main = async () => {
   // Talks hosted elsewhere are rendered straight from their definition —
   // there is nothing to build, screenshot or serve for them. They go after
   // the decks in this repository, in the order the file lists them.
-  const external = loadExternalTalks().map(talk =>
+  const external = loadExternalTalks().map((talk) =>
     renderCard({
       title: talk.title,
       href: talk.url,
@@ -163,12 +166,14 @@ const main = async () => {
   )
 
   if (failed.length) {
-    console.error(`[build] ${failed.length} deck(s) failed: ${failed.join(', ')}`)
+    console.error(
+      `[build] ${failed.length} deck(s) failed: ${failed.join(', ')}`
+    )
     process.exitCode = 1
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err.message)
   process.exitCode = 1
 })

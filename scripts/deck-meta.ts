@@ -33,7 +33,9 @@ export const parseMeta = (mdxPath: string, fallbackSlug: string): DeckMeta => {
   // publishedAt is a JSX expression. A literal date is usable; a bare
   // `new Date()` means "whenever this was built", which is not a publication
   // date at all, so it is treated as absent.
-  const published = attrs.match(/\bpublishedAt\s*=\s*\{\s*new Date\(\s*['"]([^'"]+)['"]\s*\)/)
+  const published = attrs.match(
+    /\bpublishedAt\s*=\s*\{\s*new Date\(\s*['"]([^'"]+)['"]\s*\)/
+  )
 
   return {
     title,

@@ -14,19 +14,14 @@ A collection of Japanese-language tech talk slide decks written in MDX, built wi
 pnpm install              # also runs prepare (tsc)
 pnpm run prepare          # tsc: compiles scripts/*.ts -> bin/*.js (bin/ is gitignored)
 pnpm run build            # runs ./bin/generate-slides.js src/talks — full site build into dist/
-pnpm run lint             # eslint ./src --ext .ts,.tsx
+pnpm run lint             # oxlint
+pnpm run format:check     # prettier --check . (pnpm run format to fix)
 pnpm run new              # scaffdog: scaffold src/talks/<slug>/index.mdx, asking for slug, title and date
-pnpm start                # dev server — HARDCODED to src/talks/create-touchbar-app-with-js/index.mdx
+pnpm start <slug>         # dev server for one deck; omit the slug to list them
 pnpm run clean            # rm -rf dist
 ```
 
 `pnpm run build` executes the **compiled** script in `bin/`, so run `pnpm run prepare` first after any change to `scripts/`. `bin/` is not committed, so a fresh clone must install (or run prepare) before building.
-
-To preview a deck other than the one wired into `start`:
-
-```bash
-npx mdx-deck src/talks/<slug>/index.mdx
-```
 
 The remaining `build:*` scripts (`build:mdx`, `build:screenshot`, `build:oembed`, `build:index`, `build:assets`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
 
@@ -36,7 +31,7 @@ There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` →
 
 **Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error. `mdx-deck` still drags puppeteer in as a transitive dependency, but its 2019 Chromium is deliberately never downloaded — pnpm blocks the postinstall and nothing allows it. The one casualty is `pnpm run pdf` (`mdx-deck pdf`), which needs that Chromium; run `pnpm rebuild puppeteer` first if you ever want it.
 
-**The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; Netlify builds the deployed site and takes no system packages, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that *includes* `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
+**The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; Netlify builds the deployed site and takes no system packages, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that _includes_ `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
 
 ### Calling scripts from `generate-slides.ts`
 
@@ -58,7 +53,7 @@ A talk lives at `src/talks/<slug>/index.mdx`. The **directory name is the slug**
 - `dist/<slug>/oembed.json`
 - the `slug` prop passed to `<Meta>` inside the deck
 
-If the `slug` prop in the MDX doesn't match the folder name, the OG image, oEmbed link, and canonical URL all point at nonexistent files. Renaming a talk means renaming the folder *and* the `slug` prop — `generate-slides.ts` checks the two agree before it builds anything and fails the build if they don't, so this cannot slip through unnoticed. `<Meta>` has no fallback for a missing `slug` either; it throws.
+If the `slug` prop in the MDX doesn't match the folder name, the OG image, oEmbed link, and canonical URL all point at nonexistent files. Renaming a talk means renaming the folder _and_ the `slug` prop — `generate-slides.ts` checks the two agree before it builds anything and fails the build if they don't, so this cannot slip through unnoticed. `<Meta>` has no fallback for a missing `slug` either; it throws.
 
 ### Build pipeline (`scripts/generate-slides.ts`)
 
@@ -79,7 +74,7 @@ The file is validated at the start of the build (`scripts/external-talks.ts`): m
 
 ### The landing page's CSS is Tailwind, built by the pipeline
 
-`build:css` compiles `src/index.css` into `dist/index.css`, which `src/index.html` links relatively. It runs in stage 1, but only because `dist/` is wiped there — the landing page markup is written last, and Tailwind reads the *sources*, not the output, so the ordering does not matter beyond the directory existing.
+`build:css` compiles `src/index.css` into `dist/index.css`, which `src/index.html` links relatively. It runs in stage 1, but only because `dist/` is wiped there — the landing page markup is written last, and Tailwind reads the _sources_, not the output, so the ordering does not matter beyond the directory existing.
 
 Tailwind only emits utilities it finds by scanning, and the card markup lives in a template literal inside `scripts/card.ts` rather than in any HTML. `src/index.css` names both that file and `src/index.html` with `@source` for that reason. **Adding a class in either place without it being scannable produces no error — the element just renders unstyled**, so never build a class name by concatenation.
 
@@ -119,11 +114,13 @@ Code shown via CodeSurfer is kept as a real sibling file in the deck folder (e.g
 
 ### Lint scope
 
-`.eslintignore` contains `src/talks`, so deck MDX files and their code snippets are never linted. `pnpm run lint` effectively covers only `src/components`. `scripts/` is type-checked by `tsc` (strict) but not linted.
+`pnpm run lint` is oxlint, configured by `.oxlintrc.json`. It runs the `correctness` category over `src/` and `scripts/`; `src/talks` is in `ignorePatterns`, so deck MDX files and their code snippets are never linted. `scripts/` is additionally type-checked by `tsc` (strict).
+
+**oxlint does not format.** ESLint used to report formatting through `eslint-plugin-prettier`, so a single `lint` run covered both. Formatting is now its own command — `pnpm run format:check`, with `pnpm run format` to fix — and CI runs it as a separate step. `.prettierignore` excludes `src/talks` too: the decks have never been formatted, and reflowing MDX is an easy way to break it.
 
 ## Style
 
-Prettier: no semicolons, single quotes, 2-space tabs, ES5 trailing commas. `react/prop-types` and `no-console` are off (the components are untyped-props JSX and the scripts print to stdout by design).
+Prettier: no semicolons, single quotes, 2-space tabs, ES5 trailing commas. `no-console` is off — the scripts print to stdout by design.
 
 ## Dependency situation
 

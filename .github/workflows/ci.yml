@@ -34,6 +34,11 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      # oxlint is not a formatter, so prettier is checked separately rather
+      # than surfacing through the linter the way eslint-plugin-prettier did.
+      - name: Format
+        run: pnpm run format:check
+
       # webpack 4 hashes with md4, which OpenSSL 3 (Node 17+) refuses without
       # the legacy provider.
       - name: Build
