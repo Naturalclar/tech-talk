@@ -4,6 +4,9 @@ export interface DeckMeta {
   title: string
   description: string
   slug: string
+  // What the deck actually wrote, before falling back to the title. The build
+  // checks this against the folder name; `slug` is the value to render with.
+  declaredSlug: string | null
   publishedAt: string | null
 }
 
@@ -22,10 +25,10 @@ export const parseMeta = (mdxPath: string, fallbackSlug: string): DeckMeta => {
   }
 
   const title = stringProp('title') || fallbackSlug
-  // Meta.tsx defaults description to title and slug to title; mirror that so
-  // the injected tags match what a server rendered deck would have produced.
+  // Meta.tsx defaults description to title; mirror that so the injected tags
+  // match what a server rendered deck would have produced.
   const description = stringProp('description') || title
-  const slug = stringProp('slug') || title
+  const declaredSlug = stringProp('slug')
 
   // publishedAt is a JSX expression. A literal date is usable; a bare
   // `new Date()` means "whenever this was built", which is not a publication
@@ -35,7 +38,8 @@ export const parseMeta = (mdxPath: string, fallbackSlug: string): DeckMeta => {
   return {
     title,
     description,
-    slug,
+    slug: declaredSlug || fallbackSlug,
+    declaredSlug,
     publishedAt: published ? published[1] : null,
   }
 }

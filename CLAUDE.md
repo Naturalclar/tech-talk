@@ -58,7 +58,7 @@ A talk lives at `src/talks/<slug>/index.mdx`. The **directory name is the slug**
 - `dist/<slug>/oembed.json`
 - the `slug` prop passed to `<Meta>` inside the deck
 
-If the `slug` prop in the MDX doesn't match the folder name, the OG image, oEmbed link, and canonical URL all point at nonexistent files. Renaming a talk means renaming the folder *and* the `slug` prop.
+If the `slug` prop in the MDX doesn't match the folder name, the OG image, oEmbed link, and canonical URL all point at nonexistent files. Renaming a talk means renaming the folder *and* the `slug` prop — `generate-slides.ts` checks the two agree before it builds anything and fails the build if they don't, so this cannot slip through unnoticed. `<Meta>` has no fallback for a missing `slug` either; it throws.
 
 ### Build pipeline (`scripts/generate-slides.ts`)
 

@@ -3,6 +3,7 @@
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child_process'
+import { parseMeta } from './deck-meta'
 
 const run = (cmd: string): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -60,6 +61,26 @@ const main = async () => {
   const decks = listDir(dirname)
     .filter(file => path.extname(file) === '.mdx')
     .map(mdx => ({ mdx, slug: getTitle(mdx) }))
+
+  // The folder name is the slug the build writes everything under, while the
+  // deck declares its own copy for <Meta> to render URLs from. Nothing keeps
+  // the two in step, and a mismatch is invisible: the deck builds, and only
+  // the OG image, oEmbed link and canonical URL end up pointing at files that
+  // were never written. Refuse to build instead.
+  const mismatched = decks
+    .map(deck => ({ deck, meta: parseMeta(deck.mdx, deck.slug) }))
+    .filter(({ deck, meta }) => meta.declaredSlug !== deck.slug)
+  if (mismatched.length) {
+    mismatched.forEach(({ deck, meta }) => {
+      console.error(
+        meta.declaredSlug === null
+          ? `[meta] ${deck.mdx}: <Meta> has no slug prop (expected "${deck.slug}")`
+          : `[meta] ${deck.mdx}: slug "${meta.declaredSlug}" does not match folder "${deck.slug}"`
+      )
+    })
+    process.exitCode = 1
+    return
+  }
 
   await run(`pnpm exec rimraf ./dist`)
 
