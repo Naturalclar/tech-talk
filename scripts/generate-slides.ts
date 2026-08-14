@@ -88,6 +88,10 @@ const main = async () => {
   // plain ../assets/* paths, which only resolve once dist/assets exists.
   await run(`pnpm run build:assets`)
   await run(`pnpm exec cpx ./src/_redirects ./dist`)
+  // The landing page's stylesheet. Tailwind scans the sources for the classes
+  // actually used, so this has to run after any change to index.html or the
+  // card template — which is every build, since dist/ is wiped above.
+  await run(`pnpm run build:css`)
 
   const failed: string[] = []
   await Promise.all(

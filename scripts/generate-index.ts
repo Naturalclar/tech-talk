@@ -27,27 +27,25 @@ const slidesHTML = ({
   thumbnailUrl: string
   htmlUrl: string
 }) => {
-  // The column is sized per breakpoint rather than fixed at col-4, which put
-  // three cards side by side even on a phone. The card itself carries no
-  // width: it used to be pinned to 18rem, which ignored the column it sits in.
+  // The link is the grid item: src/index.html lays the cards out with CSS
+  // grid, so there is no per-card column class and nothing here sets a width.
   //
-  // class= on the image is not cosmetic. Without it Bootstrap's
-  // .card-img-top { width: 100% } never applies and the 1280px screenshot is
-  // drawn at full size, which overflowed the page by 913px at 375px wide and
-  // left the landing page showing one corner of one thumbnail.
+  // Any class added below has to be visible to Tailwind's scanner. It reads
+  // this file because src/index.css names it with @source; a class built by
+  // string concatenation would not be found, and would silently render
+  // unstyled.
   return `
-          <div class="col-12 col-sm-6 col-lg-4 mb-4">
-            <a href="${htmlUrl}" >
-              <div class="card h-100">
-                <img class="card-img-top" src="${thumbnailUrl}" alt="${title}">
-                <div class="card-body">
-                  <h5 class="card-title">
-                    ${title}
-                  </h5>
-                </div>
-              </div>
-            </a>
-          </div>
+          <a
+            href="${htmlUrl}"
+            class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 transition hover:border-gray-300 hover:shadow-md"
+          >
+            <img src="${thumbnailUrl}" alt="${title}" class="w-full" />
+            <div class="p-4">
+              <h2 class="text-lg font-medium text-gray-900">
+                ${title}
+              </h2>
+            </div>
+          </a>
           `
 }
 

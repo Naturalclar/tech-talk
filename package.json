@@ -9,6 +9,7 @@
     "prepare": "tsc",
     "build": "node ./bin/generate-slides.js src/talks",
     "build:assets": "cpx ./src/talks/assets/**/* ./dist/assets",
+    "build:css": "tailwindcss -i ./src/index.css -o ./dist/index.css --minify",
     "build:index": "ts-node ./scripts/generate-index.ts",
     "build:mdx": "mdx-deck build",
     "build:meta": "ts-node ./scripts/generate-meta.ts",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.3.3",
+    "@tailwindcss/cli": "^4.3.3",
     "@types/node": "^11.12.0",
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.9.0",
@@ -54,6 +56,7 @@
     "rimraf": "^6.1.3",
     "scaffdog": "^4.1.0",
     "style-loader": "^0.23.1",
+    "tailwindcss": "^4.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^3.4.5"
   }
