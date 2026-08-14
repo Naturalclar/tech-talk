@@ -69,7 +69,15 @@ Walks `src/talks` recursively for `.mdx` files, then runs these stages. Everythi
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <mdx>` injects OG/Twitter/oEmbed tags into `dist/<slug>/index.html`, but only when the markup has none — see below.
 5. `generate-oembed.ts <slug> <mdx>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug> <mdx>` emits a Bootstrap card `<div>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+6. `generate-index.ts <slug> <mdx>` emits a card `<a>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+
+### The landing page's CSS is Tailwind, built by the pipeline
+
+`build:css` compiles `src/index.css` into `dist/index.css`, which `src/index.html` links relatively. It runs in stage 1, but only because `dist/` is wiped there — the landing page markup is written last, and Tailwind reads the *sources*, not the output, so the ordering does not matter beyond the directory existing.
+
+Tailwind only emits utilities it finds by scanning, and the card markup lives in a template literal inside `scripts/generate-index.ts` rather than in any HTML. `src/index.css` names both that file and `src/index.html` with `@source` for that reason. **Adding a class in either place without it being scannable produces no error — the element just renders unstyled**, so never build a class name by concatenation.
+
+This applies to the landing page only. The decks are styled by mdx-deck's own themes and styled-components and never see this stylesheet.
 
 **Stages 3–6 must not start before stage 2 has settled for that deck.** The `--no-html` retry deletes `dist/<slug>/` wholesale, so anything written there earlier goes with it — that is what used to leave half the decks without an `oembed.json`.
 
