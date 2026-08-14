@@ -69,13 +69,19 @@ Walks `src/talks` recursively for `.mdx` files, then runs these stages. Everythi
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <mdx>` injects OG/Twitter/oEmbed tags into `dist/<slug>/index.html`, but only when the markup has none — see below.
 5. `generate-oembed.ts <slug> <mdx>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug> <mdx>` emits a card `<a>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+6. `generate-index.ts <slug> <mdx>` emits a card `<a>` per deck; the parent collects them, appends a card for each entry in `src/external-talks.json`, and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+
+### Talks hosted somewhere else
+
+`src/external-talks.json` lists talks that live outside this repository, as `{ title, url, thumbnail? }`. They appear on the landing page after the built decks, in file order, and **nothing is generated for them** — no deck build, no screenshot, no `oembed.json`, since this site does not serve them. `thumbnail` is optional; a card without one reserves the same space rather than collapsing the grid row. Both card kinds come from `renderCard` in `scripts/card.ts`, so an external entry cannot drift into looking like a different component.
+
+The file is validated at the start of the build (`scripts/external-talks.ts`): malformed JSON, a missing title, or a `url` that isn't absolute `http(s)` fails the build rather than emitting a card that links to `undefined`. An empty array is the normal state when there is nothing external to list.
 
 ### The landing page's CSS is Tailwind, built by the pipeline
 
 `build:css` compiles `src/index.css` into `dist/index.css`, which `src/index.html` links relatively. It runs in stage 1, but only because `dist/` is wiped there — the landing page markup is written last, and Tailwind reads the *sources*, not the output, so the ordering does not matter beyond the directory existing.
 
-Tailwind only emits utilities it finds by scanning, and the card markup lives in a template literal inside `scripts/generate-index.ts` rather than in any HTML. `src/index.css` names both that file and `src/index.html` with `@source` for that reason. **Adding a class in either place without it being scannable produces no error — the element just renders unstyled**, so never build a class name by concatenation.
+Tailwind only emits utilities it finds by scanning, and the card markup lives in a template literal inside `scripts/card.ts` rather than in any HTML. `src/index.css` names both that file and `src/index.html` with `@source` for that reason. **Adding a class in either place without it being scannable produces no error — the element just renders unstyled**, so never build a class name by concatenation.
 
 This applies to the landing page only. The decks are styled by mdx-deck's own themes and styled-components and never see this stylesheet.
 
