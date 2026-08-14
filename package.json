@@ -1,9 +1,9 @@
 {
   "name": "mdx-slide",
   "version": "1.0.0",
+  "private": true,
   "license": "MIT",
   "author": "jesse.katsumata@gmail.com",
-  "main": "index.js",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "prepare": "tsc",
@@ -19,7 +19,7 @@
     "lint": "eslint ./src --ext .ts,.tsx",
     "new": "scaffdog generate -o .",
     "pdf": "mdx-deck pdf",
-    "start": "mdx-deck src/talks/create-touchbar-app-with-js/index.mdx"
+    "start": "ts-node ./scripts/start.ts"
   },
   "dependencies": {
     "@mdx-js/tag": "^0.15.6",
