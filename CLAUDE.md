@@ -94,7 +94,9 @@ The published origin lives in `scripts/site.ts` for everything under `scripts/`,
 
 ### Deck authoring conventions
 
-Every deck starts with the same preamble (see `.scaffdog/template.md`): imports for `CodeSurfer`, `Head`, the shared `Meta` component, and `export { swiss as theme } from 'mdx-deck/themes'`. Slides are separated by `---`.
+Every deck starts with the same preamble (see `.scaffdog/template.md`): imports for `Head` and the shared `Meta` component, and `export { swiss as theme } from 'mdx-deck/themes'`. Slides are separated by `---`.
+
+**Don't use `<CodeSurfer>` in a new deck.** It is what breaks static HTML generation, and a deck that falls back to `--no-html` ships a bare shell — no title, no OG tags, no slide content for anything that doesn't run JavaScript. Show code in a plain fenced block instead; the scaffold includes one. This is a deliberate convention rather than a limitation of the syntax: the four existing decks that use `<CodeSurfer>` are in that broken state and are left as they are, while a deck scaffolded today renders its metadata and its slides into the HTML properly.
 
 `<Head><Meta title slug description publishedAt /></Head>` is what produces all OG/Twitter/oEmbed metadata — a deck without it gets no thumbnail or social card.
 
@@ -104,13 +106,9 @@ Assets are shared across decks from `src/talks/assets/` and are referenced throu
 
 ```jsx
 <img src={require('file-loader!../assets/cat.jpg')} height="250" />
-
-<CodeSurfer code={require('!raw-loader!./my-snippet.js')} lang="javascript" ... />
 ```
 
-Code shown via CodeSurfer is kept as a real sibling file in the deck folder (e.g. `storybook-web-and-circleci/webpack.js`, `create-touchbar-app-with-js/touchbar.ts`) and pulled in with `raw-loader` rather than pasted into a fenced block.
-
-`deck.mdx` at the repo root is a leftover standalone deck; it is outside `src/talks` and is not part of the build.
+The `<CodeSurfer>` decks additionally pull their code in from a sibling file with `raw-loader` (e.g. `storybook-web-and-circleci/webpack.js`). That pattern belongs to those decks only — see the note above.
 
 ### Lint scope
 

@@ -10,12 +10,10 @@ questions:
 
 # `{{ inputs.slug }}/index.mdx`
 
-```md
-import { docco } from 'react-syntax-highlighter/styles/hljs'
-import { CodeSurfer } from "mdx-deck-code-surfer"
+````md
 import { Head } from 'mdx-deck'
 import { Meta } from '../../components'
-export { swiss as theme } from "mdx-deck/themes";
+export { swiss as theme } from 'mdx-deck/themes'
 
 <Head>
   <Meta
@@ -44,5 +42,13 @@ export { swiss as theme } from "mdx-deck/themes";
 
 ---
 
-## ありがとうございました
+## コードを見せる
+
+```js
+const hello = () => console.log('hello')
 ```
+
+---
+
+## ありがとうございました
+````
