@@ -1,8 +1,15 @@
 #!/usr/bin/env ts-node
 
-const [title] = process.argv.slice(2)
+import { parseMeta } from './deck-meta'
 
-const slides = (slug: string) => {
+const [slug, mdxPath] = process.argv.slice(2)
+
+// The card used to be labelled with the slug, because that was the only
+// argument this script got. It reads the deck's own <Meta title> now, so the
+// listing shows the talk's real title rather than its folder name.
+const title = mdxPath ? parseMeta(mdxPath, slug).title : slug
+
+const slides = () => {
   const thumbnailUrl = `./${slug}.png`
   const htmlUrl = `./${slug}/`
 
@@ -11,7 +18,7 @@ const slides = (slug: string) => {
     htmlUrl,
   }
 }
-const param = slides(title)
+const param = slides()
 
 const slidesHTML = ({
   thumbnailUrl,

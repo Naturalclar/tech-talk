@@ -126,7 +126,9 @@ const main = async () => {
   )
 
   const cards = await Promise.all(
-    built.map(deck => run(`pnpm run --silent build:index ${deck.slug}`))
+    built.map(deck =>
+      run(`pnpm run --silent build:index ${deck.slug} ${deck.mdx}`)
+    )
   )
 
   const template = fs.readFileSync(

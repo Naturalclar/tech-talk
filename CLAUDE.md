@@ -69,7 +69,7 @@ Walks `src/talks` recursively for `.mdx` files, then runs these stages. Everythi
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <mdx>` injects OG/Twitter/oEmbed tags into `dist/<slug>/index.html`, but only when the markup has none — see below.
 5. `generate-oembed.ts <slug> <mdx>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug>` emits a Bootstrap card `<div>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+6. `generate-index.ts <slug> <mdx>` emits a Bootstrap card `<div>` per deck; the parent collects them and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
 
 **Stages 3–6 must not start before stage 2 has settled for that deck.** The `--no-html` retry deletes `dist/<slug>/` wholesale, so anything written there earlier goes with it — that is what used to leave half the decks without an `oembed.json`.
 
@@ -79,7 +79,7 @@ Any deck that renders a `<CodeSurfer>` slide fails `mdx-deck build` and falls ba
 
 The consequence is that their static markup contains no `<Head>` output at all — no title, no OG tags, no oEmbed link. `generate-meta.ts` exists for that reason: it parses the `<Meta />` props straight out of the MDX (`scripts/deck-meta.ts`) and writes the tags into the built HTML, so metadata does not depend on SSR working. It skips decks whose markup already has `og:image`, which is how server rendered decks avoid getting a duplicate set.
 
-That parser is also what gives `oembed.json` its title. Because it reads what the deck declares, a deck whose `<Meta title>` is just its slug gets a slug for a title — the fix for that is in the decks, not here.
+That parser is the single source of the deck's title: `oembed.json` and the landing page card both read it, so a deck's `<Meta title>` is what appears everywhere outside the slides themselves. Note that it is not what the deck's own first slide says — those are separate strings, and nothing keeps them in step.
 
 The published origin lives in `scripts/site.ts` for everything under `scripts/`, but `src/components/Meta.tsx` hardcodes it separately for the client-side render; change both together.
 
