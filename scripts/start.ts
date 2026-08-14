@@ -12,9 +12,7 @@ const talksDir = path.join(__dirname, '..', 'src', 'talks')
 const slugs = (): string[] =>
   fs
     .readdirSync(talksDir)
-    .filter(name =>
-      fs.existsSync(path.join(talksDir, name, 'index.mdx'))
-    )
+    .filter((name) => fs.existsSync(path.join(talksDir, name, 'index.mdx')))
     .sort()
 
 const main = () => {
@@ -26,14 +24,14 @@ const main = () => {
         ? `no deck called "${slug}". available decks:`
         : 'usage: pnpm start <slug>\n\navailable decks:'
     )
-    slugs().forEach(name => console.log(`  ${name}`))
+    slugs().forEach((name) => console.log(`  ${name}`))
     process.exitCode = 1
     return
   }
 
   const mdx = path.join('src', 'talks', slug, 'index.mdx')
   const child = spawn('pnpm', ['exec', 'mdx-deck', mdx], { stdio: 'inherit' })
-  child.on('exit', code => {
+  child.on('exit', (code) => {
     process.exitCode = code === null ? 1 : code
   })
 }

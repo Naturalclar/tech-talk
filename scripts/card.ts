@@ -23,12 +23,14 @@ const escapeAttr = (value: string): string =>
     .replace(/>/g, '&gt;')
 
 const escapeText = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-export const renderCard = ({ title, href, thumbnail, external }: Card): string => {
+export const renderCard = ({
+  title,
+  href,
+  thumbnail,
+  external,
+}: Card): string => {
   // A talk on another site may not have a usable thumbnail URL. Reserving the
   // same space keeps the grid rows even instead of letting one card collapse.
   const image = thumbnail
@@ -40,9 +42,11 @@ export const renderCard = ({ title, href, thumbnail, external }: Card): string =
               <p class="mt-2 text-sm text-gray-500">外部サイト ↗</p>`
     : ''
 
-  const target = external ? `
+  const target = external
+    ? `
             target="_blank"
-            rel="noopener noreferrer"` : ''
+            rel="noopener noreferrer"`
+    : ''
 
   return `
           <a

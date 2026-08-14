@@ -68,7 +68,7 @@ const MIME: { [ext: string]: string } = {
 // file-loader and as plain relative paths, and the latter only work when the
 // sibling assets/ directory is reachable.
 const startServer = (): Promise<{ port: number; close: () => void }> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent((req.url || '/').split('?')[0])
       let filePath = path.join(distDir, urlPath)
@@ -87,7 +87,9 @@ const startServer = (): Promise<{ port: number; close: () => void }> =>
           return
         }
         const type = MIME[path.extname(filePath).toLowerCase()]
-        res.writeHead(200, { 'Content-Type': type || 'application/octet-stream' })
+        res.writeHead(200, {
+          'Content-Type': type || 'application/octet-stream',
+        })
         res.end(body)
       })
     })

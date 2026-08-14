@@ -1,0 +1,10 @@
+node_modules
+dist
+bin
+fonts
+pnpm-lock.yaml
+
+# The decks were never formatted — .eslintignore excluded them, so prettier
+# never saw them either. Reformatting them now would rewrite eight talks'
+# worth of MDX for no benefit, and MDX is easy to break with a stray reflow.
+src/talks
