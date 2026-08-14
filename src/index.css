@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 /* Tailwind v4 discovers utility classes by scanning the project. The landing
-   page's card markup is built inside a template literal in
-   scripts/generate-index.ts rather than in any HTML file, so that file is
-   registered explicitly — automatic detection skips it in some setups, and
-   the failure mode is a card with no styling at all rather than an error. */
+   page's card markup is built inside a template literal in scripts/card.ts
+   rather than in any HTML file, so that file is registered explicitly —
+   automatic detection skips it in some setups, and the failure mode is a card
+   with no styling at all rather than an error. */
 @source '../src/index.html';
-@source '../scripts/generate-index.ts';
+@source '../scripts/card.ts';

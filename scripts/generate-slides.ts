@@ -3,7 +3,9 @@
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child_process'
+import { renderCard } from './card'
 import { parseMeta } from './deck-meta'
+import { loadExternalTalks } from './external-talks'
 
 const run = (cmd: string): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -135,13 +137,28 @@ const main = async () => {
     )
   )
 
+  // Talks hosted elsewhere are rendered straight from their definition —
+  // there is nothing to build, screenshot or serve for them. They go after
+  // the decks in this repository, in the order the file lists them.
+  const external = loadExternalTalks().map(talk =>
+    renderCard({
+      title: talk.title,
+      href: talk.url,
+      thumbnail: talk.thumbnail || null,
+      external: true,
+    })
+  )
+  if (external.length) {
+    console.log(`[index] ${external.length} external talk(s) listed`)
+  }
+
   const template = fs.readFileSync(
     path.join(__dirname, '..', 'src', 'index.html'),
     'utf8'
   )
   fs.writeFileSync(
     path.join(__dirname, '..', 'dist', 'index.html'),
-    template.replace('<!--REPLACE_ME-->', cards.join('')),
+    template.replace('<!--REPLACE_ME-->', cards.concat(external).join('')),
     'utf8'
   )
 
