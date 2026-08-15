@@ -39,12 +39,8 @@ jobs:
       - name: Format
         run: pnpm run format:check
 
-      # webpack 4 hashes with md4, which OpenSSL 3 (Node 17+) refuses without
-      # the legacy provider.
       - name: Build
         run: pnpm run build
-        env:
-          NODE_OPTIONS: --openssl-legacy-provider
 
       - uses: actions/upload-artifact@v4
         with:

@@ -19,10 +19,13 @@ const escapeAttr = (value: string): string =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
 
+const escapeText = (value: string): string =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
 const main = () => {
-  const [slug, mdxPath] = process.argv.slice(2)
-  if (!slug || !mdxPath) {
-    console.log('usage: ./generate-meta [slug] [mdx-path]')
+  const [slug, deckDir] = process.argv.slice(2)
+  if (!slug || !deckDir) {
+    console.log('usage: ./generate-meta [slug] [deck-dir]')
     process.exitCode = 1
     return
   }
@@ -38,7 +41,7 @@ const main = () => {
   // than emitting a second copy of everything.
   if (html.indexOf('og:image') !== -1) return
 
-  const meta = parseMeta(mdxPath, slug)
+  const meta = parseMeta(deckDir, slug)
   const title = escapeAttr(meta.title)
   const description = escapeAttr(meta.description)
 
@@ -65,11 +68,17 @@ const main = () => {
     )
   }
 
-  // The fallback markup ships a placeholder title of "mdx-deck".
-  const titled = html.replace(
-    /<title>[\s\S]*?<\/title>/,
-    `<title>${title}</title>`
-  )
+  // The deck's own markup has no <title> — vite builds a shell and the slides
+  // arrive as JavaScript — so one is added rather than replaced. Replacing is
+  // still handled in case a shell ever ships with a placeholder.
+  const escapedTitle = `<title>${escapeText(meta.title)}</title>`
+  const titled = /<title>/.test(html)
+    ? html.replace(/<title>[\s\S]*?<\/title>/, escapedTitle)
+    : html
+  if (!/<title>/.test(html)) {
+    tags.unshift(escapedTitle)
+  }
+
   const injected = titled.replace('</head>', `${tags.join('\n')}\n</head>`)
 
   fs.writeFileSync(htmlPath, injected, 'utf8')

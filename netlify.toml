@@ -1,20 +1,16 @@
 # Netlify reads its build settings from here rather than the dashboard UI.
 #
-# NODE_VERSION matters: pnpm 10 (pinned via packageManager in package.json)
-# requires Node >= 18.12, and the deploy started failing after the pnpm
-# migration on the image's older default. 22 matches what CI runs.
+# NODE_VERSION matters: pnpm (pinned via packageManager in package.json)
+# requires Node >= 18.12, and the deploy failed on the image's older default.
+# 22 matches what CI runs.
 #
-# Moving to a current Node then reintroduces the webpack 4 md4 hash problem
-# that OpenSSL 3 rejects, so NODE_OPTIONS carries the same legacy-provider
-# flag the CI build step sets.
-
 # The build screenshots every deck, so it needs playwright's browser. Unlike
 # CI this cannot use --with-deps, which installs system packages and wants
 # sudo; the image already carries the shared libraries Chromium needs.
+
 [build]
   command = "pnpm exec playwright install chromium && pnpm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
-  NODE_OPTIONS = "--openssl-legacy-provider"

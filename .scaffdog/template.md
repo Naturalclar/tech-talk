@@ -8,21 +8,21 @@ questions:
   publishedAt: 'Enter the date you present it (YYYY-MM-DD)'
 ---
 
-# `{{ inputs.slug }}/index.mdx`
+# `{{ inputs.slug }}/meta.json`
+
+```json
+{
+  "title": "{{ inputs.title }}",
+  "description": "{{ inputs.title }}",
+  "slug": "{{ inputs.slug }}",
+  "publishedAt": "{{ inputs.publishedAt }}"
+}
+```
+
+# `{{ inputs.slug }}/slides.re.mdx`
 
 ````md
-import { Head } from 'mdx-deck'
-import { Meta } from '../../components'
-export { swiss as theme } from 'mdx-deck/themes'
-
-<Head>
-  <Meta
-    title="{{ inputs.title }}"
-    description="{{ inputs.title }}"
-    slug="{{ inputs.slug }}"
-    publishedAt={new Date("{{ inputs.publishedAt }}")}
-  />
-</Head>
+export { Themes } from '../../deck/Themes.tsx';
 
 ## {{ inputs.title }}
 
@@ -30,7 +30,7 @@ export { swiss as theme } from 'mdx-deck/themes'
 
 ## 自己紹介
 
-<img src={require('file-loader!../assets/cat.jpg')} height="250" />
+<img src="../assets/cat.jpg" height="250" />
 
 - Jesse Katsumata アメリカ人 :flag-us:
 - CureApp - React Native を使った治療アプリの開発
@@ -44,8 +44,9 @@ export { swiss as theme } from 'mdx-deck/themes'
 
 ## コードを見せる
 
-```js
+```js {2}
 const hello = () => console.log('hello')
+hello()
 ```
 
 ---

@@ -1,6 +1,6 @@
 # tech-talk
 
-登壇スライド置き場。[mdx-deck](https://github.com/jxnblk/mdx-deck) で書いた各デッキを個別の静的サイトとしてビルドし、一覧ページからリンクしています。
+登壇スライド置き場。[ReMDX](https://github.com/nkzw-tech/remdx) で書いた各デッキを個別の静的サイトとしてビルドし、一覧ページからリンクしています。
 
 公開先: <https://slides.naturalclar.dev>
 
@@ -22,11 +22,9 @@ pnpm run build      # サイト全体を dist/ にビルド
 pnpm run lint
 ```
 
-`pnpm run build` には `NODE_OPTIONS=--openssl-legacy-provider` が必要です（webpack 4 が md4 ハッシュを使うため）。
-
 ## デッキを追加する
 
-`pnpm run new` がスラグ・タイトル・登壇日を聞いて `src/talks/<slug>/index.mdx` を作ります。**フォルダ名と `<Meta slug>` は一致している必要があり**、ずれているとビルドが失敗します。
+`pnpm run new` がスラグ・タイトル・登壇日を聞いて `src/talks/<slug>/` に `slides.re.mdx` と `meta.json` を作ります。**フォルダ名と `meta.json` の `slug` は一致している必要があり**、ずれているとビルドが失敗します。
 
 ## 別の場所にあるスライドを一覧に載せる
 

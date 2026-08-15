@@ -12,7 +12,7 @@ const talksDir = path.join(__dirname, '..', 'src', 'talks')
 const slugs = (): string[] =>
   fs
     .readdirSync(talksDir)
-    .filter((name) => fs.existsSync(path.join(talksDir, name, 'index.mdx')))
+    .filter((name) => fs.existsSync(path.join(talksDir, name, 'slides.re.mdx')))
     .sort()
 
 const main = () => {
@@ -29,8 +29,10 @@ const main = () => {
     return
   }
 
-  const mdx = path.join('src', 'talks', slug, 'index.mdx')
-  const child = spawn('pnpm', ['exec', 'mdx-deck', mdx], { stdio: 'inherit' })
+  const child = spawn('pnpm', ['exec', 'vite'], {
+    env: { ...process.env, DECK: slug },
+    stdio: 'inherit',
+  })
   child.on('exit', (code) => {
     process.exitCode = code === null ? 1 : code
   })

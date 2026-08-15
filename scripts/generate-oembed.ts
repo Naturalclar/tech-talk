@@ -3,11 +3,11 @@
 import { parseMeta } from './deck-meta'
 import { SITE_URL } from './site'
 
-const [slug, mdxPath] = process.argv.slice(2)
+const [slug, deckDir] = process.argv.slice(2)
 
 // The title used to be left empty, so consumers that expanded a link had
 // nothing to label it with. It comes from the deck's own <Meta /> now.
-const title = mdxPath ? parseMeta(mdxPath, slug).title : ''
+const title = deckDir ? parseMeta(deckDir, slug).title : ''
 
 const oEmbed = {
   type: 'rich',

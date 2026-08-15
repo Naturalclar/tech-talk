@@ -1,0 +1,700 @@
+export { Themes } from '../../deck/Themes.tsx';
+
+import MonacoEditor from 'react-monaco-editor';
+
+## 登壇スライドをサクッと作ってサイトにまとめよう
+
+- @naturalclar
+- [we are javascripters! @32nd](https://wajs.connpass.com/event/130865/)
+
+---
+
+## 自己紹介
+
+<img src="../assets/cat.jpg" height="250" />
+
+- Jesse Katsumata アメリカ人 :flag-us:
+- CureApp - React Native を使った治療アプリの開発
+- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+
+---
+
+## 話すこと
+
+---
+
+- mdx-deckの紹介
+- 複数のmdxファイルを別々のスライドとして作成する
+
+---
+
+# [mdx-deck]()
+
+---
+
+### mdx-deck
+
+- markdownでSlideがかける
+- jsxも組み込める
+- 様々なテーマがある
+- このスライドもmdx-deckで作っている
+- 豊富なプラグインがある
+
+---
+
+## [CodeSurfer](https://github.com/pomber/code-surfer)
+
+---
+
+#### helloworld.tsx
+
+コードの紹介ができる
+
+```tsx 
+import React, { useState } from 'react'
+import { View, Text, TouchableOpacity } from 'react-native'
+
+type Props = {
+  foo: string
+  bar: string
+}
+
+const HelloComponent = ({ foo, bar }: Props) => {
+  const [fizz, setFizz] = useState('buzz')
+
+  return (
+    <View>
+      <Text>{fizz}</Text>
+      <TouchableOpacity onPress={handlePress}>
+        <Text>Click Me!</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+```
+
+---
+
+#### helloworld.tsx
+
+行数にズームインもできる
+
+```tsx {1}
+import React, { useState } from 'react'
+import { View, Text, TouchableOpacity } from 'react-native'
+
+type Props = {
+  foo: string
+  bar: string
+}
+
+const HelloComponent = ({ foo, bar }: Props) => {
+  const [fizz, setFizz] = useState('buzz')
+
+  return (
+    <View>
+      <Text>{fizz}</Text>
+      <TouchableOpacity onPress={handlePress}>
+        <Text>Click Me!</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+```
+
+---
+
+#### helloworld.tsx
+
+コードの細かい部分を紹介するのに便利
+
+```tsx {5-7}
+import React, { useState } from 'react'
+import { View, Text, TouchableOpacity } from 'react-native'
+
+type Props = {
+  foo: string
+  bar: string
+}
+
+const HelloComponent = ({ foo, bar }: Props) => {
+  const [fizz, setFizz] = useState('buzz')
+
+  return (
+    <View>
+      <Text>{fizz}</Text>
+      <TouchableOpacity onPress={handlePress}>
+        <Text>Click Me!</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+```
+
+---
+
+## [MonacoEditor](https://microsoft.github.io/monaco-editor/)
+
+---
+
+### MonacoEditor
+
+- microsoft が提供している、vscode に内蔵されているエディタ
+- ブラウザ上で動かせるエディタを簡単に作れる
+- React 用には[react-monaco-editor](https://github.com/react-monaco-editor/react-monaco-editor)
+
+---
+
+### Slide開いたまま即席でDemoが行える
+
+<MonacoEditor
+  width="800"
+  height="600"
+  language="javascript"
+  theme="vs-dark"
+  value={''}
+  options={{fontSize: 20}}
+  onChange={() => {}}
+  editorDidMount={() => {}}
+/>
+
+---
+
+## mdx-deck はいいぞ
+
+---
+
+### 問題点
+
+- slideshareとかにそのまま上げられない
+- pdf に変換することはできる
+- pdfに変換すると絵文字が消えたりプラグインが効かなかったりする
+
+---
+
+## 自分でホスティングしよう！
+
+---
+
+## [Netlify](https://www.netlify.com/)
+
+---
+
+### Netlify
+
+- 無料でホスティングできるサービス
+- `yarn build`で作成されたものがそのまま表示される
+
+---
+
+## 悩んだところ:thinking_face:
+
+- `mdx-deck build` で一つのスライドしか作れない‥
+- twitterに呟いた時にカードが表示されない‥
+
+---
+
+#### generate-slides.ts
+
+再帰的にmdx-deckをbuildするスクリプト
+
+```ts 
+#!/usr/bin/env ts-node
+
+import fs from 'fs'
+import path from 'path'
+import { exec, execSync } from 'child_process'
+
+// recursively get files of given path
+const listDir = (dir: string, list: string[] = []): string[] => {
+  let fileList = list
+  const files = fs.readdirSync(dir)
+  files.forEach(file => {
+    const dirPath = path.join(dir, file)
+    if (fs.statSync(dirPath).isDirectory()) {
+      fileList = listDir(dirPath, fileList)
+    } else {
+      fileList = fileList.concat(dirPath)
+    }
+  })
+  return fileList
+}
+
+// get the name of folder that contains given dirpath
+const getTitle = (dir: string): string => {
+  return path.basename(path.dirname(dir))
+}
+
+const main = () => {
+  if (process.argv.length < 3) {
+    console.log('usage: ./generate-slides [dirname]')
+    return
+  }
+
+  const dirname = process.argv[2]
+
+  // filter files that ends with .mdx
+  const mdxs = listDir(dirname).filter(file => {
+    return path.extname(file) === '.mdx'
+  })
+
+  // clean
+  exec(`yarn rimraf ./dist`)
+  exec(`yarn cpx ./src/assets ./dist/assets`)
+  let template = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'index.html'),
+    'utf8'
+  )
+  mdxs.forEach(mdx => {
+    const title = getTitle(mdx)
+    // build mdx files to separate folders
+    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
+      if (err) {
+        // if error is caught, clean and rebuild with no-html flag
+        exec(`yarn rimraf ./dist/${title}`)
+        exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+      }
+    })
+    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
+    exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
+    exec(`yarn build:index ${title}`, (err, stdout) => {
+      template = template.replace(
+        '<!--REPLACE_ME-->',
+        `${stdout}<!--REPLACE_ME-->`
+      )
+      fs.writeFileSync(
+        path.join(__dirname, '..', 'dist', 'index.html'),
+        template,
+        'utf8'
+      )
+    })
+  })
+  // move all assets to dist
+  exec(`yarn build:assets`)
+  exec(`yarn cpx ./src/_redirects ./dist`)
+}
+main()
+```
+
+---
+
+#### generate-slides.ts
+
+拡張子.mdxのファイルを探す
+
+```ts {8-20}
+#!/usr/bin/env ts-node
+
+import fs from 'fs'
+import path from 'path'
+import { exec, execSync } from 'child_process'
+
+// recursively get files of given path
+const listDir = (dir: string, list: string[] = []): string[] => {
+  let fileList = list
+  const files = fs.readdirSync(dir)
+  files.forEach(file => {
+    const dirPath = path.join(dir, file)
+    if (fs.statSync(dirPath).isDirectory()) {
+      fileList = listDir(dirPath, fileList)
+    } else {
+      fileList = fileList.concat(dirPath)
+    }
+  })
+  return fileList
+}
+
+// get the name of folder that contains given dirpath
+const getTitle = (dir: string): string => {
+  return path.basename(path.dirname(dir))
+}
+
+const main = () => {
+  if (process.argv.length < 3) {
+    console.log('usage: ./generate-slides [dirname]')
+    return
+  }
+
+  const dirname = process.argv[2]
+
+  // filter files that ends with .mdx
+  const mdxs = listDir(dirname).filter(file => {
+    return path.extname(file) === '.mdx'
+  })
+
+  // clean
+  exec(`yarn rimraf ./dist`)
+  exec(`yarn cpx ./src/assets ./dist/assets`)
+  let template = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'index.html'),
+    'utf8'
+  )
+  mdxs.forEach(mdx => {
+    const title = getTitle(mdx)
+    // build mdx files to separate folders
+    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
+      if (err) {
+        // if error is caught, clean and rebuild with no-html flag
+        exec(`yarn rimraf ./dist/${title}`)
+        exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+      }
+    })
+    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
+    exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
+    exec(`yarn build:index ${title}`, (err, stdout) => {
+      template = template.replace(
+        '<!--REPLACE_ME-->',
+        `${stdout}<!--REPLACE_ME-->`
+      )
+      fs.writeFileSync(
+        path.join(__dirname, '..', 'dist', 'index.html'),
+        template,
+        'utf8'
+      )
+    })
+  })
+  // move all assets to dist
+  exec(`yarn build:assets`)
+  exec(`yarn cpx ./src/_redirects ./dist`)
+}
+main()
+```
+
+---
+
+#### generate-slides.ts
+
+それぞれ別のフォルダでbuildする
+
+```ts {47-50}
+#!/usr/bin/env ts-node
+
+import fs from 'fs'
+import path from 'path'
+import { exec, execSync } from 'child_process'
+
+// recursively get files of given path
+const listDir = (dir: string, list: string[] = []): string[] => {
+  let fileList = list
+  const files = fs.readdirSync(dir)
+  files.forEach(file => {
+    const dirPath = path.join(dir, file)
+    if (fs.statSync(dirPath).isDirectory()) {
+      fileList = listDir(dirPath, fileList)
+    } else {
+      fileList = fileList.concat(dirPath)
+    }
+  })
+  return fileList
+}
+
+// get the name of folder that contains given dirpath
+const getTitle = (dir: string): string => {
+  return path.basename(path.dirname(dir))
+}
+
+const main = () => {
+  if (process.argv.length < 3) {
+    console.log('usage: ./generate-slides [dirname]')
+    return
+  }
+
+  const dirname = process.argv[2]
+
+  // filter files that ends with .mdx
+  const mdxs = listDir(dirname).filter(file => {
+    return path.extname(file) === '.mdx'
+  })
+
+  // clean
+  exec(`yarn rimraf ./dist`)
+  exec(`yarn cpx ./src/assets ./dist/assets`)
+  let template = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'index.html'),
+    'utf8'
+  )
+  mdxs.forEach(mdx => {
+    const title = getTitle(mdx)
+    // build mdx files to separate folders
+    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
+      if (err) {
+        // if error is caught, clean and rebuild with no-html flag
+        exec(`yarn rimraf ./dist/${title}`)
+        exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+      }
+    })
+    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
+    exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
+    exec(`yarn build:index ${title}`, (err, stdout) => {
+      template = template.replace(
+        '<!--REPLACE_ME-->',
+        `${stdout}<!--REPLACE_ME-->`
+      )
+      fs.writeFileSync(
+        path.join(__dirname, '..', 'dist', 'index.html'),
+        template,
+        'utf8'
+      )
+    })
+  })
+  // move all assets to dist
+  exec(`yarn build:assets`)
+  exec(`yarn cpx ./src/_redirects ./dist`)
+}
+main()
+```
+
+---
+
+#### generate-slides.ts
+
+twitter card用の画像はscreenshotで取得できる
+
+```ts {57}
+#!/usr/bin/env ts-node
+
+import fs from 'fs'
+import path from 'path'
+import { exec, execSync } from 'child_process'
+
+// recursively get files of given path
+const listDir = (dir: string, list: string[] = []): string[] => {
+  let fileList = list
+  const files = fs.readdirSync(dir)
+  files.forEach(file => {
+    const dirPath = path.join(dir, file)
+    if (fs.statSync(dirPath).isDirectory()) {
+      fileList = listDir(dirPath, fileList)
+    } else {
+      fileList = fileList.concat(dirPath)
+    }
+  })
+  return fileList
+}
+
+// get the name of folder that contains given dirpath
+const getTitle = (dir: string): string => {
+  return path.basename(path.dirname(dir))
+}
+
+const main = () => {
+  if (process.argv.length < 3) {
+    console.log('usage: ./generate-slides [dirname]')
+    return
+  }
+
+  const dirname = process.argv[2]
+
+  // filter files that ends with .mdx
+  const mdxs = listDir(dirname).filter(file => {
+    return path.extname(file) === '.mdx'
+  })
+
+  // clean
+  exec(`yarn rimraf ./dist`)
+  exec(`yarn cpx ./src/assets ./dist/assets`)
+  let template = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'index.html'),
+    'utf8'
+  )
+  mdxs.forEach(mdx => {
+    const title = getTitle(mdx)
+    // build mdx files to separate folders
+    exec(`yarn build:mdx ${mdx} --out-dir ./dist/${title}`, err => {
+      if (err) {
+        // if error is caught, clean and rebuild with no-html flag
+        exec(`yarn rimraf ./dist/${title}`)
+        exec(`yarn build:mdx --no-html ${mdx} --out-dir ./dist/${title}`)
+      }
+    })
+    execSync(`yarn build:screenshot ${mdx} --out-file ${title}.png`)
+    exec(`yarn build:oembed ${title} > ./dist/${title}/oembed.json`)
+    exec(`yarn build:index ${title}`, (err, stdout) => {
+      template = template.replace(
+        '<!--REPLACE_ME-->',
+        `${stdout}<!--REPLACE_ME-->`
+      )
+      fs.writeFileSync(
+        path.join(__dirname, '..', 'dist', 'index.html'),
+        template,
+        'utf8'
+      )
+    })
+  })
+  // move all assets to dist
+  exec(`yarn build:assets`)
+  exec(`yarn cpx ./src/_redirects ./dist`)
+}
+main()
+```
+
+---
+
+#### Meta.tsx
+
+meta情報を作るComponent
+
+```tsx 
+import React from 'react'
+
+const Meta = ({
+  title,
+  description = title,
+  locale = 'ja_JP',
+  publishedAt,
+  slug = title,
+}) => (
+    <>
+      <meta name="twitter:description" content={description} />
+      <meta property="og:description" content={description} />
+      <meta property="og:locale" content={locale} />
+      <meta property="og:title" content={title} />
+      <meta property="og:type" content="article" />
+      <meta
+        property="og:url"
+        content={`https://slides.naturalclar.dev/${slug}/`}
+      />
+      <meta
+        property="og:image"
+        content={`https://slides.naturalclar.dev/${slug}.png`}
+      />
+      <meta
+        property="article:published_time"
+        content={publishedAt.toISOString()}
+      />
+      <meta property="article:author" content="naturalclar" />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={title} />
+      <meta
+        name="twitter:image"
+        content={`https://slides.naturalclar.dev/${slug}.png`}
+      />
+      <title>{title}</title>
+      <link
+        rel="alternate"
+        type="application/json+oembed"
+        href={`https://slides.naturalclar.dev/${slug}/oembed.json`}
+        title={title}
+      />
+    </>
+  )
+
+export default Meta
+```
+
+---
+
+#### Meta.tsx
+
+twitter cardに必要な情報を追加
+
+```tsx {11}
+import React from 'react'
+
+const Meta = ({
+  title,
+  description = title,
+  locale = 'ja_JP',
+  publishedAt,
+  slug = title,
+}) => (
+    <>
+      <meta name="twitter:description" content={description} />
+      <meta property="og:description" content={description} />
+      <meta property="og:locale" content={locale} />
+      <meta property="og:title" content={title} />
+      <meta property="og:type" content="article" />
+      <meta
+        property="og:url"
+        content={`https://slides.naturalclar.dev/${slug}/`}
+      />
+      <meta
+        property="og:image"
+        content={`https://slides.naturalclar.dev/${slug}.png`}
+      />
+      <meta
+        property="article:published_time"
+        content={publishedAt.toISOString()}
+      />
+      <meta property="article:author" content="naturalclar" />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={title} />
+      <meta
+        name="twitter:image"
+        content={`https://slides.naturalclar.dev/${slug}.png`}
+      />
+      <title>{title}</title>
+      <link
+        rel="alternate"
+        type="application/json+oembed"
+        href={`https://slides.naturalclar.dev/${slug}/oembed.json`}
+        title={title}
+      />
+    </>
+  )
+
+export default Meta
+```
+
+---
+
+#### Meta.tsx
+
+各スライドにMeta情報を入れる
+
+```tsx {3-9}
+import React from 'react'
+
+const Meta = ({
+  title,
+  description = title,
+  locale = 'ja_JP',
+  publishedAt,
+  slug = title,
+}) => (
+    <>
+      <meta name="twitter:description" content={description} />
+      <meta property="og:description" content={description} />
+      <meta property="og:locale" content={locale} />
+      <meta property="og:title" content={title} />
+      <meta property="og:type" content="article" />
+      <meta
+        property="og:url"
+        content={`https://slides.naturalclar.dev/${slug}/`}
+      />
+      <meta
+        property="og:image"
+        content={`https://slides.naturalclar.dev/${slug}.png`}
+      />
+      <meta
+        property="article:published_time"
+        content={publishedAt.toISOString()}
+      />
+      <meta property="article:author" content="naturalclar" />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={title} />
+      <meta
+        name="twitter:image"
+        content={`https://slides.naturalclar.dev/${slug}.png`}
+      />
+      <title>{title}</title>
+      <link
+        rel="alternate"
+        type="application/json+oembed"
+        href={`https://slides.naturalclar.dev/${slug}/oembed.json`}
+        title={title}
+      />
+    </>
+  )
+
+export default Meta
+```
+
+
+---
+
+index はまだ作成途中‥
+
+---
+
+## ありがとうございました
