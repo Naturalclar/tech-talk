@@ -1,8 +1,0 @@
-- run:
-    name: "Build Storybook"
-    command: yarn storybook:build
-- store_artifacts:
-    path: storybook-static
-- run:
-    name: "Report storybook URL to Pull Request"
-    command: 'scripts/report-artifact storybook-static/index.html'

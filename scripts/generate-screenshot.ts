@@ -147,7 +147,7 @@ const main = async () => {
         await shoot(page, server.port, slug)
         console.log(`[screenshot] ${slug}.png`)
       } catch (err) {
-        console.error(`[screenshot] failed: ${slug}`, err.message)
+        console.error(`[screenshot] failed: ${slug}`, (err as Error).message)
         process.exitCode = 1
       }
     }

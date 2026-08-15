@@ -3,12 +3,12 @@
 import { renderCard } from './card'
 import { parseMeta } from './deck-meta'
 
-const [slug, mdxPath] = process.argv.slice(2)
+const [slug, deckDir] = process.argv.slice(2)
 
 // The card used to be labelled with the slug, because that was the only
 // argument this script got. It reads the deck's own <Meta title> now, so the
 // listing shows the talk's real title rather than its folder name.
-const title = mdxPath ? parseMeta(mdxPath, slug).title : slug
+const title = deckDir ? parseMeta(deckDir, slug).title : slug
 
 console.log(
   renderCard({

@@ -21,7 +21,9 @@ export const loadExternalTalks = (): ExternalTalk[] => {
   try {
     parsed = JSON.parse(fs.readFileSync(source, 'utf8'))
   } catch (err) {
-    throw new Error(`src/external-talks.json is not valid JSON: ${err.message}`)
+    throw new Error(
+      `src/external-talks.json is not valid JSON: ${(err as Error).message}`
+    )
   }
 
   if (!Array.isArray(parsed)) {

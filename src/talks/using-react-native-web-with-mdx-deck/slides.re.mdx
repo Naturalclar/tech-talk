@@ -1,18 +1,8 @@
-import { docco } from 'react-syntax-highlighter/styles/hljs'
-import { CodeSurfer } from "mdx-deck-code-surfer"
-import { Head } from 'mdx-deck'
-import { Page, Meta } from '../../components'
+import { Page } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
 import { View ,Text,StyleSheet } from 'react-native-web';
-export { swiss as theme } from "mdx-deck/themes";
 
-
-<Head>
-  <Meta 
-    title="mdx-deck で react-native-web を使う"
-    slug="using-react-native-web-with-mdx-deck"
-    publishedAt={new Date("2019-06-09")}
-  />
-</Head>
 
 ## using-react-native-web-with-mdx-deck
 
@@ -20,7 +10,7 @@ export { swiss as theme } from "mdx-deck/themes";
 
 ## 自己紹介
 
-<img src={require('file-loader!../assets/cat.jpg')} height="250" />
+<img src="../assets/cat.jpg" height="250" />
 
 
 - Jesse Katsumata アメリカ人 :flag-us:

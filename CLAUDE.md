@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A collection of Japanese-language tech talk slide decks written in MDX, built with **mdx-deck v1**. Each deck is compiled into its own static site, and a generated landing page (`dist/index.html`) links them all. Published at `https://slides.naturalclar.dev` (Netlify — see `src/_redirects`).
+A collection of Japanese-language tech talk slide decks written in MDX, built with **[ReMDX](https://github.com/nkzw-tech/remdx)** on vite. Each deck is compiled into its own static site, and a generated landing page (`dist/index.html`) links them all. Published at `https://slides.naturalclar.dev` (Netlify — see `src/_redirects`).
 
 ## Commands
 
@@ -16,28 +16,25 @@ pnpm run prepare          # tsc: compiles scripts/*.ts -> bin/*.js (bin/ is giti
 pnpm run build            # runs ./bin/generate-slides.js src/talks — full site build into dist/
 pnpm run lint             # oxlint
 pnpm run format:check     # prettier --check . (pnpm run format to fix)
-pnpm run new              # scaffdog: scaffold src/talks/<slug>/index.mdx, asking for slug, title and date
+pnpm run new              # scaffdog: scaffold src/talks/<slug>/, asking for slug, title and date
 pnpm start <slug>         # dev server for one deck; omit the slug to list them
 pnpm run clean            # rm -rf dist
 ```
 
 `pnpm run build` executes the **compiled** script in `bin/`, so run `pnpm run prepare` first after any change to `scripts/`. `bin/` is not committed, so a fresh clone must install (or run prepare) before building.
 
-The remaining `build:*` scripts (`build:mdx`, `build:screenshot`, `build:oembed`, `build:index`, `build:assets`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
+The remaining `build:*` scripts (`build:screenshot`, `build:meta`, `build:oembed`, `build:index`, `build:assets`, `build:css`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
 
 There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact.
 
-**`pnpm run build` requires `NODE_OPTIONS=--openssl-legacy-provider` on Node 17+.** webpack 4 hashes with md4, which OpenSSL 3 refuses; without the flag the build dies with `ERR_OSSL_EVP_UNSUPPORTED`. CI sets it on the build step.
-
-**Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error. `mdx-deck` still drags puppeteer in as a transitive dependency, but its 2019 Chromium is deliberately never downloaded — pnpm blocks the postinstall and nothing allows it. The one casualty is `pnpm run pdf` (`mdx-deck pdf`), which needs that Chromium; run `pnpm rebuild puppeteer` first if you ever want it.
+**Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error.
 
 **The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; Netlify builds the deployed site and takes no system packages, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that _includes_ `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
 
 ### Calling scripts from `generate-slides.ts`
 
-The orchestrator shells out to the other npm-scripts. Two rules that are easy to get wrong:
+The orchestrator shells out to the other npm-scripts. One rule that is easy to get wrong:
 
-- **Never insert `--` before the arguments.** pnpm forwards the literal `--` into the script, and `mdx-deck` then treats it as a positional argument, silently ignoring `--out-dir` and dumping every deck into `dist/` root. Write `pnpm run build:mdx <file> --out-dir <dir>`; flags forward fine without a separator.
 - **Use `pnpm run --silent` when the output is redirected.** `build:oembed` writes to `dist/<slug>/oembed.json` via shell redirection, and without `--silent` pnpm's `> pkg@version script` banner lands inside the JSON.
 
 Binaries that aren't wrapped in a script (`rimraf`, `cpx`) are invoked with `pnpm exec`.
@@ -46,25 +43,25 @@ Binaries that aren't wrapped in a script (`rimraf`, `cpx`) are invoked with `pnp
 
 ### The slug convention holds everything together
 
-A talk lives at `src/talks/<slug>/index.mdx`. The **directory name is the slug**, and `generate-slides.ts` derives it via `path.basename(path.dirname(mdxPath))`. That single string is used for:
+A talk lives at `src/talks/<slug>/`, holding `slides.re.mdx` and `meta.json`. The **directory name is the slug**. That single string is used for:
 
 - output directory `dist/<slug>/`
 - screenshot `dist/<slug>.png` (also the og:image)
 - `dist/<slug>/oembed.json`
-- the `slug` prop passed to `<Meta>` inside the deck
+- the `slug` field in the deck's `meta.json`
 
-If the `slug` prop in the MDX doesn't match the folder name, the OG image, oEmbed link, and canonical URL all point at nonexistent files. Renaming a talk means renaming the folder _and_ the `slug` prop — `generate-slides.ts` checks the two agree before it builds anything and fails the build if they don't, so this cannot slip through unnoticed. `<Meta>` has no fallback for a missing `slug` either; it throws.
+If `meta.json`'s `slug` doesn't match the folder name, the OG image, oEmbed link, and canonical URL all point at nonexistent files. Renaming a talk means renaming the folder _and_ the field — `generate-slides.ts` checks the two agree before it builds anything and fails the build if they don't, so this cannot slip through unnoticed.
 
 ### Build pipeline (`scripts/generate-slides.ts`)
 
-Walks `src/talks` recursively for `.mdx` files, then runs these stages. Everything is `async`/`await` over promisified `exec`, and the ordering between stages is load-bearing:
+Collects the directories under `src/talks` that contain `slides.re.mdx`, then runs these stages. Everything is `async`/`await` over promisified `exec`, and the ordering between stages is load-bearing:
 
 1. Wipe `dist/`, then copy `src/talks/assets/**` and `src/_redirects` into it. **Assets go first** — decks reference shared images as plain `../assets/*` paths, which only resolve once `dist/assets` exists, and the screenshots in stage 3 would otherwise capture broken images.
-2. `mdx-deck build` → `dist/<slug>/`, all decks in parallel. If a deck errors, `buildDeck` wipes that folder and retries with `--no-html` (several decks fail static HTML generation; the no-html fallback is the escape hatch). A deck whose fallback also fails is dropped from the remaining stages and makes the build exit non-zero.
+2. `vite build` → `dist/<slug>/`, all decks in parallel. Each is a build of the shared shell in `src/deck`, pointed at that deck's slides by the `DECK` variable that `vite.config.ts` reads. A deck that fails is dropped from the remaining stages and makes the build exit non-zero.
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
-4. `generate-meta.ts <slug> <mdx>` injects OG/Twitter/oEmbed tags into `dist/<slug>/index.html`, but only when the markup has none — see below.
-5. `generate-oembed.ts <slug> <mdx>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug> <mdx>` emits a card `<a>` per deck; the parent collects them, appends a card for each entry in `src/external-talks.json`, and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+4. `generate-meta.ts <slug> <deck-dir>` writes the OG/Twitter/oEmbed tags and the `<title>` into `dist/<slug>/index.html`.
+5. `generate-oembed.ts <slug> <deck-dir>` → `dist/<slug>/oembed.json`.
+6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, appends a card for each entry in `src/external-talks.json`, and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
 
 ### Talks hosted somewhere else
 
@@ -78,37 +75,33 @@ The file is validated at the start of the build (`scripts/external-talks.ts`): m
 
 Tailwind only emits utilities it finds by scanning, and the card markup lives in a template literal inside `scripts/card.ts` rather than in any HTML. `src/index.css` names both that file and `src/index.html` with `@source` for that reason. **Adding a class in either place without it being scannable produces no error — the element just renders unstyled**, so never build a class name by concatenation.
 
-This applies to the landing page only. The decks are styled by mdx-deck's own themes and styled-components and never see this stylesheet.
+This applies to the landing page only. The decks are styled by ReMDX's stylesheet and `src/deck/Themes.tsx`, and never see this one.
 
-**Stages 3–6 must not start before stage 2 has settled for that deck.** The `--no-html` retry deletes `dist/<slug>/` wholesale, so anything written there earlier goes with it — that is what used to leave half the decks without an `oembed.json`.
+### Decks render in the browser
 
-### `<CodeSurfer>` decks cannot be server rendered
+A deck's built `index.html` is a shell — vite emits the slides as JavaScript, and nothing is pre-rendered. Metadata therefore cannot come from the deck itself, which is why `generate-meta.ts` writes the tags and the `<title>` in afterwards, and why `meta.json` exists separately from the slides.
 
-Any deck that renders a `<CodeSurfer>` slide fails `mdx-deck build` and falls back to `--no-html`. The component reads mdx-deck's deck context, which is null under `renderToString`; guarding one access just moves the crash to the next one, so treat this as a property of `mdx-deck-code-surfer` rather than something to fix in the deck. Four of the eight decks are in this state, and `create-your-own-slides-page` additionally trips over Node trying to import Monaco's `.css`.
+`src/deck` holds the shell every deck shares: `index.html`, `main.tsx`, and `Themes.tsx`. A deck that exports no theme renders black text on ReMDX's black backdrop, so every `slides.re.mdx` re-exports the shared one.
 
-The consequence is that their static markup contains no `<Head>` output at all — no title, no OG tags, no oEmbed link. `generate-meta.ts` exists for that reason: it parses the `<Meta />` props straight out of the MDX (`scripts/deck-meta.ts`) and writes the tags into the built HTML, so metadata does not depend on SSR working. It skips decks whose markup already has `og:image`, which is how server rendered decks avoid getting a duplicate set.
-
-That parser is the single source of the deck's title: `oembed.json` and the landing page card both read it, so a deck's `<Meta title>` is what appears everywhere outside the slides themselves. Note that it is not what the deck's own first slide says — those are separate strings, and nothing keeps them in step.
-
-The published origin lives in `scripts/site.ts` for everything under `scripts/`, but `src/components/Meta.tsx` hardcodes it separately for the client-side render; change both together.
+**Module-level `import` and `export` lines in a `.re.mdx` file must end with a semicolon.** The plugin lifts them out with `/^(?:import|export)[^;]+;/`; without the semicolon the line is left in the slide body, and whatever it exported silently never takes effect.
 
 ### Deck authoring conventions
 
-Every deck starts with the same preamble (see `.scaffdog/template.md`): imports for `Head` and the shared `Meta` component, and `export { swiss as theme } from 'mdx-deck/themes'`. Slides are separated by `---`.
+Every deck starts with the same preamble (see `.scaffdog/template.md`): `export { Themes } from '../../deck/Themes.tsx';`. Slides are separated by `---`, and a slide may open with a `--` block of per-slide data (`image:`, `theme:`).
 
 **Don't use `<CodeSurfer>` in a new deck.** It is what breaks static HTML generation, and a deck that falls back to `--no-html` ships a bare shell — no title, no OG tags, no slide content for anything that doesn't run JavaScript. Show code in a plain fenced block instead; the scaffold includes one. This is a deliberate convention rather than a limitation of the syntax: the four existing decks that use `<CodeSurfer>` are in that broken state and are left as they are, while a deck scaffolded today renders its metadata and its slides into the HTML properly.
 
-`<Head><Meta title slug description publishedAt /></Head>` is what produces all OG/Twitter/oEmbed metadata — a deck without it gets no thumbnail or social card.
+`meta.json` is what produces all OG/Twitter/oEmbed metadata — a deck without it fails the build.
 
-Shared React components live in `src/components` (`Meta`, `Layout`, `Page`, `Avatar`) and are imported as `from '../../components'`.
+Shared React components live in `src/components` (`Layout`, `Page`, `Avatar`) and are imported as `from '../../components'`.
 
-Assets are shared across decks from `src/talks/assets/` and are referenced through webpack loader syntax, because `webpack.config.js` (picked up by mdx-deck) wires up `file-loader`, `raw-loader`, `css-loader`, and the Monaco plugin:
+Assets are shared across decks from `src/talks/assets/` and referenced as plain relative paths:
 
 ```jsx
-<img src={require('file-loader!../assets/cat.jpg')} height="250" />
+<img src="../assets/cat.jpg" height="250" />
 ```
 
-The `<CodeSurfer>` decks additionally pull their code in from a sibling file with `raw-loader` (e.g. `storybook-web-and-circleci/webpack.js`). That pattern belongs to those decks only — see the note above.
+That resolves against the deck's own URL (`/<slug>/`), which is why `dist/assets` has to exist before the screenshots run. Code is shown in fenced blocks — the plugin highlights them with shiki, and `\`\`\`js {5-7}` highlights a line range.
 
 ### Lint scope
 
@@ -122,6 +115,6 @@ Prettier: no semicolons, single quotes, 2-space tabs, ES5 trailing commas. `no-c
 
 ## Dependency situation
 
-This project is pinned to an old stack: mdx-deck v1, ESLint 5, TypeScript 3.4, webpack 4. The dependencies still install and build under Node 22, but only with the OpenSSL workaround above. Upgrading any one of them is a breaking change to the deck syntax or build pipeline — don't casually bump versions while making unrelated changes.
+The stack is current: ReMDX 20, React 19, vite, TypeScript 7, oxlint, prettier 3, Tailwind 4.
 
-Because pnpm does not hoist, everything the repo's own files import has to be declared in `package.json`. Several packages that used to resolve only transitively under yarn are now explicit dependencies for that reason: `react`, `react-dom`, `styled-components`, `@mdx-js/tag` and `babel-loader` (imported by the decks, `src/components`, and `webpack.config.js`), `react-syntax-highlighter` (imported by every deck's preamble), `rimraf` (shelled out to by `generate-slides.ts`), and `@types/node` (needed by `tsc` for `scripts/`). Their versions are matched to what mdx-deck v1 resolves — don't bump them independently of mdx-deck.
+Because pnpm does not hoist, everything the repo's own files import has to be declared in `package.json` — `rimraf` and `cpx2` are shelled out to by `generate-slides.ts`, and `@types/node` is needed by `tsc` for `scripts/`.

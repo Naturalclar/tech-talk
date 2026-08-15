@@ -1,16 +1,4 @@
-import { docco } from 'react-syntax-highlighter/styles/hljs'
-export { swiss as theme } from "mdx-deck/themes";
-import { CodeSurfer } from "mdx-deck-code-surfer"
-import { Head } from 'mdx-deck'
-import { Meta } from '../../components'
-
-<Head>
-  <Meta title="Storybook を使った React Native のテストを Web 上で行う"
-  description="we are javascripters! @28th での発表"
-  slug="react-native-with-storybook-on-web"
-  publishedAt={new Date("2019-01-24")}
-  />
-</Head>
+export { Themes } from '../../deck/Themes.tsx';
 
 ### Storybookを使ったReact−NativeのテストをWeb上で行う
 - @natural_clar
@@ -83,18 +71,57 @@ import { Meta } from '../../components'
 
 
 
-<CodeSurfer
-  title="webpack.config.js"
-  code={require("!raw-loader!./my-snippet.js")}
-  lang="javascript"
-  showNumbers={false}
-  dark={false}
-  steps={[
-    { notes: ".storybookフォルダにいれる"},
-    { lines: [1], notes: "storybookのconfig"},
-    { range: [5, 7] , notes: "aliasの設定"},
-  ]}
-/>
+#### webpack.config.js
+
+.storybookフォルダにいれる
+
+```js 
+module.exports = (config, configType) => {
+  config.resolve = {
+    modules: ['node_modules'],
+    extensions: ['.web.js', '.js', '.json', '.web.jsx', '.jsx'],
+    alias: {
+      'react-native$': require.resolve('react-native-web'),
+    },
+  }
+}
+```
+
+---
+
+#### webpack.config.js
+
+storybookのconfig
+
+```js {1}
+module.exports = (config, configType) => {
+  config.resolve = {
+    modules: ['node_modules'],
+    extensions: ['.web.js', '.js', '.json', '.web.jsx', '.jsx'],
+    alias: {
+      'react-native$': require.resolve('react-native-web'),
+    },
+  }
+}
+```
+
+---
+
+#### webpack.config.js
+
+aliasの設定
+
+```js {5-7}
+module.exports = (config, configType) => {
+  config.resolve = {
+    modules: ['node_modules'],
+    extensions: ['.web.js', '.js', '.json', '.web.jsx', '.jsx'],
+    alias: {
+      'react-native$': require.resolve('react-native-web'),
+    },
+  }
+}
+```
 
 ---
 

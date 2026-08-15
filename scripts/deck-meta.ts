@@ -1,47 +1,35 @@
 import fs from 'fs'
+import path from 'path'
 
 export interface DeckMeta {
   title: string
   description: string
   slug: string
-  // What the deck actually wrote, before falling back to the title. The build
-  // checks this against the folder name; `slug` is the value to render with.
-  declaredSlug: string | null
   publishedAt: string | null
 }
 
-// Reads the props off the <Meta /> element a deck declares inside <Head>.
-// The decks are the only place this information exists, and parsing it here
-// means the build no longer needs mdx-deck to server render the deck just to
-// find out what its title is.
-export const parseMeta = (mdxPath: string, fallbackSlug: string): DeckMeta => {
-  const source = fs.readFileSync(mdxPath, 'utf8')
-  const element = source.match(/<Meta\b([\s\S]*?)\/>/)
-  const attrs = element ? element[1] : ''
+// A deck's metadata lives beside its slides in meta.json. It used to be
+// scraped out of the MDX with a regular expression, back when the deck
+// rendered it through a <Meta> component; nothing renders it now, the build
+// writes the tags itself, so it is plain data.
+export const parseMeta = (deckDir: string, fallbackSlug: string): DeckMeta => {
+  const file = path.join(deckDir, 'meta.json')
 
-  const stringProp = (name: string): string | null => {
-    const match = attrs.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`))
-    return match ? match[1] : null
+  let parsed: any
+  try {
+    parsed = JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch (err) {
+    throw new Error(`${file}: ${(err as Error).message}`)
   }
 
-  const title = stringProp('title') || fallbackSlug
-  // Meta.tsx defaults description to title; mirror that so the injected tags
-  // match what a server rendered deck would have produced.
-  const description = stringProp('description') || title
-  const declaredSlug = stringProp('slug')
-
-  // publishedAt is a JSX expression. A literal date is usable; a bare
-  // `new Date()` means "whenever this was built", which is not a publication
-  // date at all, so it is treated as absent.
-  const published = attrs.match(
-    /\bpublishedAt\s*=\s*\{\s*new Date\(\s*['"]([^'"]+)['"]\s*\)/
-  )
+  if (!parsed || typeof parsed.title !== 'string' || !parsed.title) {
+    throw new Error(`${file}: needs a title`)
+  }
 
   return {
-    title,
-    description,
-    slug: declaredSlug || fallbackSlug,
-    declaredSlug,
-    publishedAt: published ? published[1] : null,
+    title: parsed.title,
+    description: parsed.description || parsed.title,
+    slug: typeof parsed.slug === 'string' ? parsed.slug : fallbackSlug,
+    publishedAt: parsed.publishedAt || null,
   }
 }
