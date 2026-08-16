@@ -51,7 +51,7 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: slides
           path: dist
