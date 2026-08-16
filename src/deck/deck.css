@@ -1,0 +1,17 @@
+/* A slide is a flex column, and a flex item with no width of its own gets
+   stretched across the cross axis — so an <img> carrying no width attribute
+   was blown up to the full slide width. electron.png, 128px square, rendered
+   at 1190px.
+
+   This has to be CSS rather than remdx's `Components` export: the decks write
+   their images as JSX, and MDX only routes markdown syntax through the
+   component mapping.
+
+   align-self stops the stretching without dictating a size, so the width and
+   height attributes the decks already use keep working. The maximums are a
+   backstop for images larger than the slide itself. */
+#root img {
+  align-self: center;
+  max-height: 70vh;
+  max-width: 100%;
+}
