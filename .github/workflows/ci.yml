@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Must come before setup-node: the pnpm cache lookup needs pnpm on PATH.
       - uses: pnpm/action-setup@v5
