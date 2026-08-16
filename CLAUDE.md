@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A collection of Japanese-language tech talk slide decks written in MDX, built with **[ReMDX](https://github.com/nkzw-tech/remdx)** on vite. Each deck is compiled into its own static site, and a generated landing page (`dist/index.html`) links them all. Published at `https://slides.naturalclar.dev` (Netlify — see `src/_redirects`).
+A collection of Japanese-language tech talk slide decks written in MDX, built with **[ReMDX](https://github.com/nkzw-tech/remdx)** on vite. Each deck is compiled into its own static site, and a generated landing page (`dist/index.html`) links them all. Published at `https://slides.naturalclar.dev`.
+
+**Hosting is mid-migration.** `.github/workflows/ci.yml` builds and deploys to GitHub Pages on every push to `master`, and Netlify still builds and serves the custom domain until its DNS is pointed at Pages. Both are live on purpose; `netlify.toml` and `src/_redirects` come out once the cutover is confirmed. See #84.
 
 ## Commands
 
@@ -27,7 +29,7 @@ The remaining `build:*` scripts (`build:screenshot`, `build:meta`, `build:oembed
 
 ### `scripts/` is TypeScript that node runs directly
 
-`node ./scripts/generate-slides.ts` — no build step, no `bin/`. Node ≥ 22.18 strips the types itself, which is what `engines` in `package.json` pins and why `netlify.toml` sets `NODE_VERSION` to 22 (it resolves to the latest 22.x).
+`node ./scripts/generate-slides.ts` — no build step, no `bin/`. Node ≥ 22.18 strips the types itself, which is what `engines` in `package.json` pins, why the workflow asks for Node 22, and why `netlify.toml` sets `NODE_VERSION` to 22 (it resolves to the latest 22.x).
 
 Two consequences follow from that, and both are easy to trip over:
 
@@ -40,7 +42,7 @@ Two consequences follow from that, and both are easy to trip over:
 
 **Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error.
 
-**The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; Netlify builds the deployed site and takes no system packages, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that _includes_ `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
+**The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; the deployed site is built on a machine nobody here provisions, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that _includes_ `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
 
 ### Calling scripts from `generate-slides.ts`
 
@@ -69,6 +71,9 @@ Collects the directories under `src/talks` that contain `slides.re.mdx`, then ru
 
 1. Wipe `dist/`, then copy `src/talks/assets/**` and `src/_redirects` into it. **Assets go first** — decks reference shared images as plain `../assets/*` paths, which only resolve once `dist/assets` exists, and the screenshots in stage 3 would otherwise capture broken images.
 2. `vite build` → `dist/<slug>/`, all decks in parallel. Each is a build of the shared shell in `src/deck`, pointed at that deck's slides by the `DECK` variable that `vite.config.ts` reads. A deck that fails is dropped from the remaining stages and makes the build exit non-zero.
+
+   **The base is relative (`./`), not `/<slug>/`.** A deck's assets only ever sit beside it, and an absolute base pins the whole site to the root of a domain — which is what makes it servable from `<user>.github.io/tech-talk/` as well as from `slides.naturalclar.dev/`. Do not "fix" this back to an absolute path.
+
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <deck-dir>` writes the OG/Twitter/oEmbed tags and the `<title>` into `dist/<slug>/index.html`.
 5. `generate-oembed.ts <slug> <deck-dir>` → `dist/<slug>/oembed.json`.
