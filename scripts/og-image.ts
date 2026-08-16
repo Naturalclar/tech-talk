@@ -103,9 +103,80 @@ export const fetchOgImage = async (pageUrl: string): Promise<string | null> => {
 
   // Redirects are followed, so the image may be relative to somewhere other
   // than the URL asked for.
-  const image = findImage(html, response.url || pageUrl)
-  console.log(image ? `[og] ${pageUrl}: ${image}` : `[og] ${pageUrl}: no image`)
-  return image
+  const landed = response.url || pageUrl
+  const image = findImage(html, landed)
+  if (!image) {
+    console.log(`[og] ${pageUrl}: no image`)
+    return null
+  }
+
+  // A tag that exists is not the same as an image that loads. Every deck
+  // listed here bakes an absolute og:image into its HTML, so a deck that
+  // moved host still advertises the address it had when it was built — the
+  // three talks this was written for all point at now.sh from pages now
+  // served off vercel.app. Left alone that is a broken <img> on the landing
+  // page, which is worse than the placeholder it replaces.
+  if (await loads(image)) {
+    console.log(`[og] ${pageUrl}: ${image}`)
+    return image
+  }
+
+  // The image is almost always an asset of the deck itself, so the same path
+  // on the host that just served the page is the address it moved to.
+  const moved = sameOrigin(image, landed)
+  if (moved && (await loads(moved))) {
+    console.log(`[og] ${pageUrl}: ${moved} (og:image ${image} is gone)`)
+    return moved
+  }
+
+  console.log(`[og] ${pageUrl}: ${image} does not load`)
+  return null
+}
+
+// The og:image path, re-pointed at the origin the page was served from.
+// Returns null when it already is that origin and there is nothing to try.
+const sameOrigin = (imageUrl: string, pageUrl: string): string | null => {
+  try {
+    const image = new URL(imageUrl)
+    const page = new URL(pageUrl)
+    if (image.origin === page.origin) return null
+    return new URL(image.pathname + image.search, page.origin).href
+  } catch {
+    return null
+  }
+}
+
+// HEAD is enough to know an image is there, and avoids downloading it. Hosts
+// that refuse the method get a GET that is cancelled as soon as the status
+// line arrives, rather than being written off as missing.
+const loads = async (imageUrl: string): Promise<boolean> => {
+  const ask = async (method: 'HEAD' | 'GET'): Promise<Response | null> => {
+    try {
+      return await fetch(imageUrl, {
+        method,
+        redirect: 'follow',
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
+    } catch {
+      return null
+    }
+  }
+
+  const head = await ask('HEAD')
+  if (head?.ok) {
+    await head.body?.cancel().catch(() => {})
+    return true
+  }
+
+  if (head && head.status !== 405 && head.status !== 501) {
+    await head.body?.cancel().catch(() => {})
+    return false
+  }
+
+  const get = await ask('GET')
+  const ok = !!get?.ok
+  await get?.body?.cancel().catch(() => {})
+  return ok
 }
 
 // Stops at </head> or MAX_BYTES rather than buffering a whole deck.

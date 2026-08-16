@@ -1,47 +1,46 @@
 // There is no test runner in this repository, so this is a script: run it
 // with `node ./scripts/og-image.test.ts`. It serves the fixtures below from a
 // local port, which is the only way to exercise fetchOgImage without reaching
-// a real host — and the failure paths (404, timeout, connection refused) are
-// the point, since every one of them has to end in a card rather than a
-// broken build.
+// a real host — and the failure paths (404, timeout, connection refused, an
+// og:image that no longer loads) are the point, since every one of them has
+// to end in a card rather than a broken build or a broken image.
+//
+// {ORIGIN} in a fixture is replaced with the test server's own origin, so a
+// fixture can declare an absolute og:image that actually resolves.
 
 import http from 'http'
 import { fetchOgImage, findImage } from './og-image.ts'
 
 const FIXTURES: { [path: string]: string } = {
   '/absolute': `<html><head>
-    <meta property="og:image" content="https://cdn.example.com/card.png"/>
+    <meta property="og:image" content="{ORIGIN}/img/card.png"/>
   </head><body>deck</body></html>`,
 
   '/relative': `<html><head>
-    <meta property="og:image" content="/static/card.png"/>
+    <meta property="og:image" content="/img/card.png"/>
   </head></html>`,
 
-  '/dot-relative': `<html><head>
+  '/nested/dot-relative': `<html><head>
     <meta property="og:image" content="card.png"/>
   </head></html>`,
 
   // The HTML spec's attribute rather than Open Graph's.
   '/name-attr': `<html><head>
-    <meta name="og:image" content="https://cdn.example.com/by-name.png"/>
+    <meta name="og:image" content="{ORIGIN}/img/card.png"/>
   </head></html>`,
 
   '/single-quotes': `<html><head>
-    <meta property='og:image' content='https://cdn.example.com/quoted.png'/>
-  </head></html>`,
-
-  '/entities': `<html><head>
-    <meta property="og:image" content="https://cdn.example.com/c.png?a=1&amp;b=2"/>
+    <meta property='og:image' content='{ORIGIN}/img/card.png'/>
   </head></html>`,
 
   // og:image wins even when twitter:image is declared first.
   '/both': `<html><head>
-    <meta name="twitter:image" content="https://cdn.example.com/twitter.png"/>
-    <meta property="og:image" content="https://cdn.example.com/og.png"/>
+    <meta name="twitter:image" content="{ORIGIN}/img/twitter.png"/>
+    <meta property="og:image" content="{ORIGIN}/img/card.png"/>
   </head></html>`,
 
   '/twitter-only': `<html><head>
-    <meta name="twitter:image" content="https://cdn.example.com/twitter.png"/>
+    <meta name="twitter:image" content="{ORIGIN}/img/twitter.png"/>
   </head></html>`,
 
   '/none': `<html><head><title>a deck with no image</title></head></html>`,
@@ -57,8 +56,29 @@ const FIXTURES: { [path: string]: string } = {
   // A client-rendered deck: the tag is real but the body is enormous. The
   // reader has to stop at </head> rather than buffering the bundle.
   '/huge': `<html><head>
-    <meta property="og:image" content="https://cdn.example.com/huge.png"/>
+    <meta property="og:image" content="{ORIGIN}/img/card.png"/>
   </head><body>${'x'.repeat(4 * 1024 * 1024)}</body></html>`,
+
+  // A deck that moved host: the absolute og:image still names where it used
+  // to live, and that address is dead. The same path is served from here.
+  '/moved': `<html><head>
+    <meta property="og:image" content="http://127.0.0.1:1/img/card.png"/>
+  </head></html>`,
+
+  // Moved, and the path is not served on this origin either.
+  '/moved-and-gone': `<html><head>
+    <meta property="og:image" content="http://127.0.0.1:1/img/nowhere.png"/>
+  </head></html>`,
+
+  // Same origin, image simply deleted — there is nowhere else to look.
+  '/image-404': `<html><head>
+    <meta property="og:image" content="/img/deleted.png"/>
+  </head></html>`,
+
+  // A host that rejects HEAD. The image is there; a GET has to confirm it.
+  '/head-405': `<html><head>
+    <meta property="og:image" content="/img/no-head.png"/>
+  </head></html>`,
 }
 
 let failures = 0
@@ -72,8 +92,41 @@ const check = (name: string, actual: unknown, expected: unknown): void => {
 }
 
 const main = async () => {
+  let origin = ''
+
   const server = http.createServer((req, res) => {
     const url = req.url || '/'
+    const method = req.method || 'GET'
+
+    // Sits beside /nested/dot-relative, so a relative og:image lands on it.
+    if (url === '/nested/card.png') {
+      res.writeHead(200, { 'Content-Type': 'image/png' })
+      res.end(method === 'HEAD' ? undefined : Buffer.from([0x89, 0x50]))
+      return
+    }
+
+    // The images. /img/no-head.png exists but refuses HEAD; /img/deleted.png
+    // and everything else under /img/ is gone.
+    if (url.startsWith('/img/')) {
+      if (url === '/img/no-head.png' && method === 'HEAD') {
+        res.writeHead(405)
+        res.end()
+        return
+      }
+      if (url === '/img/card.png' || url === '/img/no-head.png') {
+        res.writeHead(200, { 'Content-Type': 'image/png' })
+        res.end(method === 'HEAD' ? undefined : Buffer.from([0x89, 0x50]))
+        return
+      }
+      if (url === '/img/twitter.png') {
+        res.writeHead(200, { 'Content-Type': 'image/png' })
+        res.end(method === 'HEAD' ? undefined : Buffer.from([0x89, 0x50]))
+        return
+      }
+      res.writeHead(404)
+      res.end()
+      return
+    }
 
     if (url === '/404') {
       res.writeHead(404)
@@ -101,7 +154,7 @@ const main = async () => {
     }
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-    res.end(body)
+    res.end(body.replaceAll('{ORIGIN}', origin))
   })
 
   const port: number = await new Promise((resolve) => {
@@ -111,59 +164,53 @@ const main = async () => {
     })
   })
 
-  const origin = `http://127.0.0.1:${port}`
+  origin = `http://127.0.0.1:${port}`
   const at = (p: string) => fetchOgImage(`${origin}${p}`)
+  const img = `${origin}/img/card.png`
 
   console.log('--- parsing ---')
-  check(
-    'absolute og:image',
-    await at('/absolute'),
-    'https://cdn.example.com/card.png'
-  )
-  check(
-    'root-relative resolves against the page',
-    await at('/relative'),
-    `${origin}/static/card.png`
-  )
+  check('absolute og:image', await at('/absolute'), img)
+  check('root-relative resolves against the page', await at('/relative'), img)
   check(
     'path-relative resolves against the page',
-    await at('/dot-relative'),
-    `${origin}/card.png`
+    await at('/nested/dot-relative'),
+    `${origin}/nested/card.png`
   )
-  check(
-    'name= is read as well as property=',
-    await at('/name-attr'),
-    'https://cdn.example.com/by-name.png'
-  )
-  check(
-    'single-quoted attributes',
-    await at('/single-quotes'),
-    'https://cdn.example.com/quoted.png'
-  )
-  check(
-    '&amp; in a query string is decoded',
-    await at('/entities'),
-    'https://cdn.example.com/c.png?a=1&b=2'
-  )
-  check(
-    'og:image beats twitter:image',
-    await at('/both'),
-    'https://cdn.example.com/og.png'
-  )
+  check('name= is read as well as property=', await at('/name-attr'), img)
+  check('single-quoted attributes', await at('/single-quotes'), img)
+  check('og:image beats twitter:image', await at('/both'), img)
   check(
     'twitter:image is used when it is the only one',
     await at('/twitter-only'),
-    'https://cdn.example.com/twitter.png'
+    `${origin}/img/twitter.png`
   )
   check(
     'a redirect resolves relative to where it landed',
     await at('/redirect'),
-    `${origin}/static/card.png`
+    img
   )
   check(
     'stops at </head> instead of reading a 4MB body',
     await at('/huge'),
-    'https://cdn.example.com/huge.png'
+    img
+  )
+
+  console.log('\n--- the image itself has to load ---')
+  check(
+    'a deck that moved host falls back to the same path on the new one',
+    await at('/moved'),
+    img
+  )
+  check(
+    '...but only when that path is really there',
+    await at('/moved-and-gone'),
+    null
+  )
+  check('a deleted image on the same origin', await at('/image-404'), null)
+  check(
+    'a host that refuses HEAD is confirmed with GET',
+    await at('/head-405'),
+    `${origin}/img/no-head.png`
   )
 
   console.log('\n--- every failure ends in null, never a throw ---')
@@ -197,6 +244,14 @@ const main = async () => {
       'https://example.com/deck/'
     ),
     'https://example.com/a.png'
+  )
+  check(
+    '&amp; in a query string is decoded',
+    findImage(
+      '<meta property="og:image" content="https://cdn.example.com/c.png?a=1&amp;b=2">',
+      'https://example.com/'
+    ),
+    'https://cdn.example.com/c.png?a=1&b=2'
   )
 
   server.close()
