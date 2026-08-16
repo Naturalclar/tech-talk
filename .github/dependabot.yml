@@ -1,0 +1,27 @@
+# Dependabot was previously running only from the repository's security
+# settings, which left 21 PRs editing a yarn.lock that the pnpm migration
+# deleted — none of them could be merged. Declaring the ecosystem here points
+# it at pnpm-lock.yaml instead.
+#
+# `npm` is the ecosystem name for the whole npm registry family; Dependabot
+# picks the lockfile up from the repository and runs pnpm for it. There is no
+# separate "pnpm" value.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    # Routine bumps arrive as one PR instead of a dozen. Majors stay
+    # individual: they are the ones that need reading.
+    groups:
+      minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    open-pull-requests-limit: 5
