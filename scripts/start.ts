@@ -1,5 +1,3 @@
-#!/usr/bin/env ts-node
-
 import fs from 'fs'
 import path from 'path'
 import { spawn } from 'child_process'
@@ -7,7 +5,7 @@ import { spawn } from 'child_process'
 // `pnpm start` used to be pinned to one deck, so previewing any other meant
 // bypassing the script and remembering the path. It takes a slug now.
 
-const talksDir = path.join(__dirname, '..', 'src', 'talks')
+const talksDir = path.join(import.meta.dirname, '..', 'src', 'talks')
 
 const slugs = (): string[] =>
   fs

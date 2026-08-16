@@ -1,5 +1,14 @@
 {
   "compilerOptions": {
+    // scripts/ is executed by node directly, so nothing here is emitted; tsc
+    // only type-checks. Importing a './x.ts' specifier — which node requires
+    // and a bundler would rewrite — is allowed for that reason.
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    // Node strips the types rather than compiling them, so anything it cannot
+    // erase (enum, namespace, parameter properties) has to be a build error
+    // instead of a runtime one.
+    "erasableSyntaxOnly": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -7,13 +16,17 @@
     // DOM types even though nothing here runs in one.
     "lib": ["es2023", "dom"],
     "module": "node18",
-    "outDir": "./bin",
-    "rootDir": "./scripts",
+    // playwright-core's protocol.d.ts declares its namespaces with the old
+    // `declare module Protocol` spelling, which TypeScript 7 rejects outright
+    // (TS1540). That is a grammar error in a dependency, not something this
+    // repository can fix, and it is the reason playwright used to be pulled in
+    // with an untyped require() instead of an import.
+    "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
     "types": ["node"]
   },
-  // Only the build scripts are compiled to bin/. The decks and the vite config
-  // are handled by vite itself.
+  // Only the build scripts are checked here. The decks and the vite config are
+  // handled by vite itself.
   "include": ["./scripts"]
 }

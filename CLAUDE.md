@@ -11,21 +11,32 @@ A collection of Japanese-language tech talk slide decks written in MDX, built wi
 **The package manager is pnpm** (pinned via `packageManager` in `package.json`). There is no `yarn.lock`; don't reintroduce one.
 
 ```bash
-pnpm install              # also runs prepare (tsc)
-pnpm run prepare          # tsc: compiles scripts/*.ts -> bin/*.js (bin/ is gitignored)
-pnpm run build            # runs ./bin/generate-slides.js src/talks — full site build into dist/
+pnpm install
+pnpm run build            # runs scripts/generate-slides.ts src/talks — full site build into dist/
 pnpm run lint             # oxlint
+pnpm run typecheck        # tsc (noEmit) over scripts/
 pnpm run format:check     # prettier --check . (pnpm run format to fix)
 pnpm run new              # scaffdog: scaffold src/talks/<slug>/, asking for slug, title and date
 pnpm start <slug>         # dev server for one deck; omit the slug to list them
 pnpm run clean            # rm -rf dist
 ```
 
-`pnpm run build` executes the **compiled** script in `bin/`, so run `pnpm run prepare` first after any change to `scripts/`. `bin/` is not committed, so a fresh clone must install (or run prepare) before building.
-
 The remaining `build:*` scripts (`build:screenshot`, `build:meta`, `build:oembed`, `build:index`, `build:assets`, `build:css`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
 
-There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact.
+There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run typecheck` → `pnpm run format:check` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact.
+
+### `scripts/` is TypeScript that node runs directly
+
+`node ./scripts/generate-slides.ts` — no build step, no `bin/`. Node ≥ 22.18 strips the types itself, which is what `engines` in `package.json` pins and why `netlify.toml` sets `NODE_VERSION` to 22 (it resolves to the latest 22.x).
+
+Two consequences follow from that, and both are easy to trip over:
+
+- **Nothing type-checks during a build.** Node erases the annotations without reading them, so a type error is invisible until `pnpm run typecheck` runs. That is why CI has its own step for it; `tsconfig.json` is `noEmit` and exists only for that command and the editor.
+- **The package is ESM** (`"type": "module"`). `__dirname` does not exist — use `import.meta.dirname` — and **relative imports need the `.ts` extension** (`from './card.ts'`), which is what `allowImportingTsExtensions` is for. Anything node cannot erase (`enum`, `namespace`, parameter properties) fails the build instead of surprising you at runtime, via `erasableSyntaxOnly`.
+
+`"type": "module"` reaches past `scripts/` — a `.js` config file anywhere in the repo is now ESM too, which is why `.prettierrc.js` and `.scaffdog/config.js` are `export default` rather than `module.exports`.
+
+**Do not commit a compiled `vite.config.js`.** Vite resolves `vite.config.js` before `vite.config.ts`, so a stale compiled copy silently wins and edits to the `.ts` source do nothing. One was committed by accident during the ReMDX migration and went unnoticed until the ESM switch broke it.
 
 **Screenshots need a browser that isn't installed by `pnpm install`.** `build:screenshot` drives playwright, whose Chromium comes from `pnpm exec playwright install chromium` (CI uses `--with-deps` so the system libraries come too). Without that step the build fails at the screenshot stage with a missing-executable error.
 
@@ -116,6 +127,8 @@ Prettier: no semicolons, single quotes, 2-space tabs, ES5 trailing commas. `no-c
 ## Dependency situation
 
 The stack is current: ReMDX 20, React 19, vite, TypeScript 7, oxlint, prettier 3, Tailwind 4.
+
+TypeScript 7 is the native (Go) compiler — `node_modules/typescript/bin/tsc` is a thin wrapper that executes a statically linked binary from `@typescript/typescript-<platform>-<arch>`. `skipLibCheck` is on because playwright-core's `protocol.d.ts` uses the old `declare module Protocol` spelling, which TypeScript 7 rejects as a grammar error (TS1540).
 
 Because pnpm does not hoist, everything the repo's own files import has to be declared in `package.json` — `rimraf` and `cpx2` are shelled out to by `generate-slides.ts`, and `@types/node` is needed by `tsc` for `scripts/`.
 

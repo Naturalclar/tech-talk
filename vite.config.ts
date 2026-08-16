@@ -15,13 +15,19 @@ if (!deck) {
   )
 }
 
-const slides = path.resolve(__dirname, 'src', 'talks', deck, 'slides.re.mdx')
+const slides = path.resolve(
+  import.meta.dirname,
+  'src',
+  'talks',
+  deck,
+  'slides.re.mdx'
+)
 
 export default defineConfig({
   base: `/${deck}/`,
   build: {
     emptyOutDir: true,
-    outDir: path.resolve(__dirname, 'dist', deck),
+    outDir: path.resolve(import.meta.dirname, 'dist', deck),
   },
   plugins: [remdx(), react()],
   resolve: {
@@ -31,5 +37,5 @@ export default defineConfig({
       'react-native': 'react-native-web',
     },
   },
-  root: path.resolve(__dirname, 'src', 'deck'),
+  root: path.resolve(import.meta.dirname, 'src', 'deck'),
 })

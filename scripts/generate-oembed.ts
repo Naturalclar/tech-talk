@@ -1,7 +1,5 @@
-#!/usr/bin/env ts-node
-
-import { parseMeta } from './deck-meta'
-import { SITE_URL } from './site'
+import { parseMeta } from './deck-meta.ts'
+import { SITE_URL } from './site.ts'
 
 const [slug, deckDir] = process.argv.slice(2)
 

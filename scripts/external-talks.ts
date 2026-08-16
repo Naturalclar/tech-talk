@@ -9,7 +9,12 @@ export interface ExternalTalk {
   thumbnail?: string
 }
 
-const source = path.join(__dirname, '..', 'src', 'external-talks.json')
+const source = path.join(
+  import.meta.dirname,
+  '..',
+  'src',
+  'external-talks.json'
+)
 
 // Talks published somewhere other than this repository. They are listed
 // alongside the built decks but nothing is generated for them: no deck build,

@@ -21,8 +21,6 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      # `pnpm install` also runs the `prepare` script (tsc), which is what
-      # compiles scripts/ into the gitignored bin/ that `pnpm build` executes.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -33,6 +31,11 @@ jobs:
 
       - name: Lint
         run: pnpm run lint
+
+      # node runs scripts/ by stripping the types, never checking them, so
+      # nothing in the build would notice a type error. This step is the check.
+      - name: Typecheck
+        run: pnpm run typecheck
 
       # oxlint is not a formatter, so prettier is checked separately rather
       # than surfacing through the linter the way eslint-plugin-prettier did.
