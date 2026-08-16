@@ -35,13 +35,22 @@ pnpm run typecheck  # ビルドは型を見ないので、型チェックはこ�
 [
   {
     "title": "スライドのタイトル",
-    "url": "https://example.com/my-slide/",
-    "thumbnail": "https://example.com/my-slide/card.png"
+    "url": "https://example.com/my-slide/"
   }
 ]
 ```
 
-`thumbnail` は任意です。これらはリンクを並べるだけで、ビルドもサムネイル生成も行いません。
+**サムネイルはリンク先の `og:image` を自動で取得します。**画像が実際に読めるかどうかまで確認し、`og:image` が古いホストを指している場合は同じパスを現在のホストで探し直します。それでも駄目なとき（タイムアウト、404、`og:image` が無い等）はプレースホルダになるだけで、ビルドは失敗しません。
+
+自動取得の結果を上書きしたいときだけ `thumbnail` に画像 URL を書いてください。
+
+```json
+{
+  "title": "スライドのタイトル",
+  "url": "https://example.com/my-slide/",
+  "thumbnail": "https://example.com/my-slide/card.png"
+}
+```
 
 ## 構成
 

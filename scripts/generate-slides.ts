@@ -4,6 +4,7 @@ import { exec } from 'child_process'
 import { renderCard } from './card.ts'
 import { parseMeta } from './deck-meta.ts'
 import { loadExternalTalks } from './external-talks.ts'
+import { fetchOgImage } from './og-image.ts'
 
 const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -110,15 +111,23 @@ const main = async () => {
   )
 
   // Talks hosted elsewhere are rendered straight from their definition —
-  // there is nothing to build, screenshot or serve for them. They go after
-  // the decks in this repository, in the order the file lists them.
-  const external = loadExternalTalks().map((talk) =>
-    renderCard({
-      external: true,
-      href: talk.url,
-      thumbnail: talk.thumbnail || null,
-      title: talk.title,
-    })
+  // there is nothing to build or serve for them. They go after the decks in
+  // this repository, in the order the file lists them.
+  //
+  // A card still wants a thumbnail, and there is no screenshot in dist/ to
+  // use. The linked page already declares one for every other link unfurler,
+  // so that og:image is fetched here. An explicit thumbnail in the JSON wins:
+  // it is the way to override a page whose og:image is wrong or missing.
+  const talks = loadExternalTalks()
+  const external = await Promise.all(
+    talks.map(async (talk) =>
+      renderCard({
+        external: true,
+        href: talk.url,
+        thumbnail: talk.thumbnail || (await fetchOgImage(talk.url)),
+        title: talk.title,
+      })
+    )
   )
   if (external.length) {
     console.log(`[index] ${external.length} external talk(s) listed`)
