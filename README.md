@@ -6,7 +6,7 @@
 
 ## セットアップ
 
-パッケージマネージャは pnpm です。
+パッケージマネージャは pnpm、Node は 22.18 以上が必要です（ビルドスクリプトの TypeScript を node が直接実行するため）。
 
 ```bash
 pnpm install
@@ -20,6 +20,7 @@ pnpm start <slug>   # 1 つのデッキを開発サーバでプレビュー（sl
 pnpm run new        # 新しいデッキの雛形を作る
 pnpm run build      # サイト全体を dist/ にビルド
 pnpm run lint
+pnpm run typecheck  # ビルドは型を見ないので、型チェックはこちら
 ```
 
 ## デッキを追加する

@@ -1,7 +1,5 @@
-#!/usr/bin/env ts-node
-
-import { renderCard } from './card'
-import { parseMeta } from './deck-meta'
+import { renderCard } from './card.ts'
+import { parseMeta } from './deck-meta.ts'
 
 const [slug, deckDir] = process.argv.slice(2)
 

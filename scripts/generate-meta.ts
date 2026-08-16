@@ -1,9 +1,7 @@
-#!/usr/bin/env ts-node
-
 import fs from 'fs'
 import path from 'path'
-import { parseMeta } from './deck-meta'
-import { SITE_URL } from './site'
+import { parseMeta } from './deck-meta.ts'
+import { SITE_URL } from './site.ts'
 
 // Decks using <CodeSurfer> cannot be server rendered — the component reads
 // mdx-deck's deck context, which is null under renderToString — so those decks
@@ -30,7 +28,13 @@ const main = () => {
     return
   }
 
-  const htmlPath = path.join(__dirname, '..', 'dist', slug, 'index.html')
+  const htmlPath = path.join(
+    import.meta.dirname,
+    '..',
+    'dist',
+    slug,
+    'index.html'
+  )
   if (!fs.existsSync(htmlPath)) {
     console.log(`[meta] ${slug}: no index.html, skipped`)
     return

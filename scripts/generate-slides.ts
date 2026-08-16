@@ -1,11 +1,9 @@
-#!/usr/bin/env ts-node
-
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child_process'
-import { renderCard } from './card'
-import { parseMeta } from './deck-meta'
-import { loadExternalTalks } from './external-talks'
+import { renderCard } from './card.ts'
+import { parseMeta } from './deck-meta.ts'
+import { loadExternalTalks } from './external-talks.ts'
 
 const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -127,11 +125,11 @@ const main = async () => {
   }
 
   const template = fs.readFileSync(
-    path.join(__dirname, '..', 'src', 'index.html'),
+    path.join(import.meta.dirname, '..', 'src', 'index.html'),
     'utf8'
   )
   fs.writeFileSync(
-    path.join(__dirname, '..', 'dist', 'index.html'),
+    path.join(import.meta.dirname, '..', 'dist', 'index.html'),
     template.replace('<!--REPLACE_ME-->', cards.concat(external).join('')),
     'utf8'
   )

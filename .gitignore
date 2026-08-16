@@ -2,7 +2,6 @@ node_modules
 yarn-error.log
 .vscode
 dist
-bin
 .DS_Store
 
 *.pdf

@@ -1,20 +1,14 @@
-#!/usr/bin/env ts-node
-
 import fs from 'fs'
 import http from 'http'
 import os from 'os'
 import path from 'path'
-
-// playwright's type definitions target a much newer TypeScript than the 3.4
-// this repo is pinned to, so it is required untyped rather than imported.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { chromium } = require('playwright')
+import { chromium, type Page } from 'playwright'
 
 const WIDTH = 1280
 const HEIGHT = 720
 
-const distDir = path.join(__dirname, '..', 'dist')
-const fontsDir = path.join(__dirname, '..', 'fonts')
+const distDir = path.join(import.meta.dirname, '..', 'dist')
+const fontsDir = path.join(import.meta.dirname, '..', 'fonts')
 
 // Nearly every deck title is Japanese, and a machine with no Japanese font
 // renders those titles as tofu boxes. Rather than rely on the build image
@@ -100,7 +94,7 @@ const startServer = (): Promise<{ port: number; close: () => void }> =>
     })
   })
 
-const shoot = async (page: any, port: number, slug: string): Promise<void> => {
+const shoot = async (page: Page, port: number, slug: string): Promise<void> => {
   await page.goto(`http://127.0.0.1:${port}/${slug}/`, {
     waitUntil: 'networkidle',
     timeout: 30000,
