@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { parsePublishedAt } from './published-at.ts'
 
 export interface DeckMeta {
   title: string
@@ -30,6 +31,6 @@ export const parseMeta = (deckDir: string, fallbackSlug: string): DeckMeta => {
     title: parsed.title,
     description: parsed.description || parsed.title,
     slug: typeof parsed.slug === 'string' ? parsed.slug : fallbackSlug,
-    publishedAt: parsed.publishedAt || null,
+    publishedAt: parsePublishedAt(parsed.publishedAt, file),
   }
 }

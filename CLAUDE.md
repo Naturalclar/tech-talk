@@ -72,11 +72,19 @@ Collects the directories under `src/talks` that contain `slides.re.mdx`, then ru
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <deck-dir>` writes the OG/Twitter/oEmbed tags and the `<title>` into `dist/<slug>/index.html`.
 5. `generate-oembed.ts <slug> <deck-dir>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, appends a card for each entry in `src/external-talks.json` — fetching each of those pages' `og:image` for its thumbnail — and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`. **This stage reaches the network**, which is the only one that does.
+6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, renders a card for each entry in `src/external-talks.json` — fetching each of those pages' `og:image` for its thumbnail — sorts the two kinds together by `publishedAt`, and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`. **This stage reaches the network**, which is the only one that does.
+
+### `publishedAt` orders the landing page
+
+Every card shows the date its talk was given, so the listing is sorted by it — newest first, both kinds interleaved. Where a talk happens to be hosted is not something a visitor orders by, and a listing that shows dates in any other order reads as unsorted.
+
+The field is read from two files, a deck's `meta.json` and an entry in `src/external-talks.json`, and `scripts/published-at.ts` is the only thing that parses it. It insists on `YYYY-MM-DD` and rejects a date that does not exist — `2019-02-31` parses fine and silently becomes March 3 otherwise. That check used to be missing because the value only fed an OG tag; now it also decides where a card lands, where a wrong value sorts wrong without complaining.
+
+A talk with no date sorts last rather than being dropped, and ties keep collection order, so the page does not shuffle between builds.
 
 ### Talks hosted somewhere else
 
-`src/external-talks.json` lists talks that live outside this repository, as `{ title, url, thumbnail? }`. They appear on the landing page after the built decks, in file order, and **nothing is built for them** — no deck build, no `oembed.json`, since this site does not serve them. Both card kinds come from `renderCard` in `scripts/card.ts`, so an external entry cannot drift into looking like a different component.
+`src/external-talks.json` lists talks that live outside this repository, as `{ title, url, thumbnail?, publishedAt? }`. They are sorted in among the built decks by date, and **nothing is built for them** — no deck build, no `oembed.json`, since this site does not serve them. Both card kinds come from `renderCard` in `scripts/card.ts`, so an external entry cannot drift into looking like a different component.
 
 The file is validated at the start of the build (`scripts/external-talks.ts`): malformed JSON, a missing title, or a `url` that isn't absolute `http(s)` fails the build rather than emitting a card that links to `undefined`. An empty array is the normal state when there is nothing external to list.
 

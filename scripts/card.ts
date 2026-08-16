@@ -7,11 +7,15 @@
 // names it with @source. A class assembled by concatenation would not be
 // found, and the card would render unstyled without any error.
 
+import { formatPublishedAt } from './published-at.ts'
+
 export interface Card {
   title: string
   href: string
   // Absent for an external talk whose thumbnail could not be supplied.
   thumbnail: string | null
+  // YYYY-MM-DD. Absent only if a talk has no date recorded at all.
+  publishedAt: string | null
   external?: boolean
 }
 
@@ -29,6 +33,7 @@ export const renderCard = ({
   title,
   href,
   thumbnail,
+  publishedAt,
   external,
 }: Card): string => {
   // A talk on another site may not have a usable thumbnail URL. Reserving the
@@ -37,10 +42,20 @@ export const renderCard = ({
     ? `<img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="w-full" />`
     : `<div class="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
 
-  const badge = external
-    ? `
-              <p class="mt-2 text-sm text-gray-500">外部サイト ↗</p>`
+  // Date and badge share a row: they are both "about" the talk rather than
+  // part of its title, and stacking them would make external cards taller
+  // than the decks beside them.
+  const date = publishedAt
+    ? `<time datetime="${escapeAttr(publishedAt)}">${escapeText(formatPublishedAt(publishedAt))}</time>`
     : ''
+
+  const badge = external ? `<span>外部サイト ↗</span>` : ''
+
+  const footer =
+    date || badge
+      ? `
+              <p class="mt-2 flex items-center gap-2 text-sm text-gray-500">${date}${badge}</p>`
+      : ''
 
   const target = external
     ? `
@@ -57,7 +72,7 @@ export const renderCard = ({
             <div class="p-4">
               <h2 class="text-lg font-medium text-gray-900">
                 ${escapeText(title)}
-              </h2>${badge}
+              </h2>${footer}
             </div>
           </a>
           `
