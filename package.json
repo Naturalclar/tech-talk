@@ -21,6 +21,7 @@
     "lint": "oxlint",
     "new": "scaffdog generate -o .",
     "start": "node ./scripts/start.ts",
+    "test": "node ./scripts/og-image.test.ts",
     "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

@@ -37,6 +37,12 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      # Only og-image.ts is covered. It talks to hosts nobody here controls,
+      # so its failure paths are the ones worth pinning down; the test serves
+      # its own fixtures and never leaves localhost.
+      - name: Test
+        run: pnpm run test
+
       # oxlint is not a formatter, so prettier is checked separately rather
       # than surfacing through the linter the way eslint-plugin-prettier did.
       - name: Format

@@ -23,7 +23,7 @@ pnpm run clean            # rm -rf dist
 
 The remaining `build:*` scripts (`build:screenshot`, `build:meta`, `build:oembed`, `build:index`, `build:assets`, `build:css`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
 
-There is no test suite. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run typecheck` → `pnpm run format:check` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact.
+`pnpm run test` covers one module, `scripts/og-image.ts` — the only code here that depends on servers nobody in this repository controls. Everything else is checked by building it. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run typecheck` → `pnpm run test` → `pnpm run format:check` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact.
 
 ### `scripts/` is TypeScript that node runs directly
 
@@ -72,13 +72,21 @@ Collects the directories under `src/talks` that contain `slides.re.mdx`, then ru
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <deck-dir>` writes the OG/Twitter/oEmbed tags and the `<title>` into `dist/<slug>/index.html`.
 5. `generate-oembed.ts <slug> <deck-dir>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, appends a card for each entry in `src/external-talks.json`, and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`.
+6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, appends a card for each entry in `src/external-talks.json` — fetching each of those pages' `og:image` for its thumbnail — and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`. **This stage reaches the network**, which is the only one that does.
 
 ### Talks hosted somewhere else
 
-`src/external-talks.json` lists talks that live outside this repository, as `{ title, url, thumbnail? }`. They appear on the landing page after the built decks, in file order, and **nothing is generated for them** — no deck build, no screenshot, no `oembed.json`, since this site does not serve them. `thumbnail` is optional; a card without one reserves the same space rather than collapsing the grid row. Both card kinds come from `renderCard` in `scripts/card.ts`, so an external entry cannot drift into looking like a different component.
+`src/external-talks.json` lists talks that live outside this repository, as `{ title, url, thumbnail? }`. They appear on the landing page after the built decks, in file order, and **nothing is built for them** — no deck build, no `oembed.json`, since this site does not serve them. Both card kinds come from `renderCard` in `scripts/card.ts`, so an external entry cannot drift into looking like a different component.
 
 The file is validated at the start of the build (`scripts/external-talks.ts`): malformed JSON, a missing title, or a `url` that isn't absolute `http(s)` fails the build rather than emitting a card that links to `undefined`. An empty array is the normal state when there is nothing external to list.
+
+#### Thumbnails come from the linked page's `og:image`
+
+There is no screenshot in `dist/` for a talk this site does not serve, so `scripts/og-image.ts` fetches the page during stage 6 and reads the `og:image` it already declares for every other link unfurler (`twitter:image` is the fallback, relative values resolve against the page, and redirects resolve against where they landed). An explicit `thumbnail` in the JSON wins — that is how to override a page whose `og:image` is wrong or missing.
+
+**Every failure has to end in a card, never a failed deploy.** These are hosts nobody here controls, so a timeout, a 404, a moved page or a missing tag all return `null` and the card falls back to the same reserved-space placeholder as before, with the reason on stdout as `[og] <url>: …`. Nothing about this is allowed to throw.
+
+This is the one part of the build with a test, `scripts/og-image.test.ts`, run by `pnpm run test` — precisely because it depends on other people's servers. It serves its own fixtures on localhost and never leaves it, and it covers the failure paths as deliberately as the parsing.
 
 ### The landing page's CSS is Tailwind, built by the pipeline
 
