@@ -25,3 +25,22 @@ updates:
           - minor
           - patch
     open-pull-requests-limit: 5
+
+  # The workflow's actions were pinned and then never looked at again, which
+  # is how they all ended up on a runtime GitHub had deprecated. `directory`
+  # is the repository root, not .github/workflows — Dependabot finds the
+  # workflow files itself.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    groups:
+      minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    open-pull-requests-limit: 5
