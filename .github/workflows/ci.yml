@@ -6,6 +6,12 @@ on:
       - master
   pull_request:
 
+# Only one deploy at a time, and a newer push wins. Cancelling an in-flight
+# deploy is not safe, so a running one is allowed to finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -51,7 +57,36 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # On a pull request this is how the result gets looked at, now that
+      # there are no deploy previews: download it and open dist/index.html.
       - uses: actions/upload-artifact@v7
         with:
           name: slides
           path: dist
+
+      # Pages wants the same directory in its own tar format. Only master is
+      # ever published, so a pull request stops at the artifact above.
+      - name: Package for Pages
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  # Split out because publishing needs permissions the build has no business
+  # holding, and because the environment records the live URL.
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

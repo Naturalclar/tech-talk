@@ -24,7 +24,12 @@ const slides = path.resolve(
 )
 
 export default defineConfig({
-  base: `/${deck}/`,
+  // Relative rather than `/${deck}/`: the deck's own folder is the only thing
+  // its assets are ever beside, and an absolute base pins the site to the
+  // root of a domain. That is what makes it servable from a subpath —
+  // <user>.github.io/tech-talk/ — which is where GitHub Pages puts it until
+  // the custom domain is pointed at it.
+  base: './',
   build: {
     emptyOutDir: true,
     outDir: path.resolve(import.meta.dirname, 'dist', deck),
