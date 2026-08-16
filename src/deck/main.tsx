@@ -1,5 +1,6 @@
 import { render } from '@nkzw/remdx'
 import '@nkzw/remdx/style.css'
+import './deck.css'
 
 // Which deck this resolves to is decided by vite.config.ts from the DECK
 // environment variable. Every deck shares this entry point, so a deck folder
