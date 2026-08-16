@@ -72,7 +72,6 @@ const main = async () => {
   // Assets go in before the screenshots: decks reference shared images as
   // plain ../assets/* paths, which only resolve once dist/assets exists.
   await run(`pnpm run build:assets`)
-  await run(`pnpm exec cpx ./src/_redirects ./dist`)
   await run(`pnpm run build:css`)
 
   // Each deck is a vite build of the shared shell in src/deck, pointed at that

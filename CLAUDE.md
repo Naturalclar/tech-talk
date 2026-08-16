@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A collection of Japanese-language tech talk slide decks written in MDX, built with **[ReMDX](https://github.com/nkzw-tech/remdx)** on vite. Each deck is compiled into its own static site, and a generated landing page (`dist/index.html`) links them all. Published at `https://slides.naturalclar.dev`.
 
-**Hosting is mid-migration.** `.github/workflows/ci.yml` builds and deploys to GitHub Pages on every push to `master`, and Netlify still builds and serves the custom domain until its DNS is pointed at Pages. Both are live on purpose; `netlify.toml` and `src/_redirects` come out once the cutover is confirmed. See #84.
+**Hosted on GitHub Pages**, built and deployed by `.github/workflows/ci.yml` on every push to `master`. It was on Netlify until #84; nothing in the repository references Netlify any more, and a `_redirects` file would do nothing.
+
+There are no deploy previews. A pull request uploads `dist/` as the `slides` artifact instead — download it and open `dist/index.html` to look at a change.
 
 ## Commands
 
@@ -25,11 +27,11 @@ pnpm run clean            # rm -rf dist
 
 The remaining `build:*` scripts (`build:screenshot`, `build:meta`, `build:oembed`, `build:index`, `build:assets`, `build:css`) are sub-steps invoked by `generate-slides.ts`, not meant to be run by hand except when debugging one stage.
 
-`pnpm run test` covers one module, `scripts/og-image.ts` — the only code here that depends on servers nobody in this repository controls. Everything else is checked by building it. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run typecheck` → `pnpm run test` → `pnpm run format:check` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact.
+`pnpm run test` covers one module, `scripts/og-image.ts` — the only code here that depends on servers nobody in this repository controls. Everything else is checked by building it. CI (`.github/workflows/ci.yml`) runs `pnpm run lint` → `pnpm run typecheck` → `pnpm run test` → `pnpm run format:check` → `pnpm run build` on Node 22 and uploads `dist/` as an artifact. On `master` it then packages that same `dist/` and publishes it with `actions/deploy-pages` — one build, deployed, never rebuilt for the deploy.
 
 ### `scripts/` is TypeScript that node runs directly
 
-`node ./scripts/generate-slides.ts` — no build step, no `bin/`. Node ≥ 22.18 strips the types itself, which is what `engines` in `package.json` pins, why the workflow asks for Node 22, and why `netlify.toml` sets `NODE_VERSION` to 22 (it resolves to the latest 22.x).
+`node ./scripts/generate-slides.ts` — no build step, no `bin/`. Node ≥ 22.18 strips the types itself, which is what `engines` in `package.json` pins and why the workflow asks for Node 22.
 
 Two consequences follow from that, and both are easy to trip over:
 
@@ -69,7 +71,7 @@ If `meta.json`'s `slug` doesn't match the folder name, the OG image, oEmbed link
 
 Collects the directories under `src/talks` that contain `slides.re.mdx`, then runs these stages. Everything is `async`/`await` over promisified `exec`, and the ordering between stages is load-bearing:
 
-1. Wipe `dist/`, then copy `src/talks/assets/**` and `src/_redirects` into it. **Assets go first** — decks reference shared images as plain `../assets/*` paths, which only resolve once `dist/assets` exists, and the screenshots in stage 3 would otherwise capture broken images.
+1. Wipe `dist/`, then copy `src/talks/assets/**` into it. **Assets go first** — decks reference shared images as plain `../assets/*` paths, which only resolve once `dist/assets` exists, and the screenshots in stage 3 would otherwise capture broken images.
 2. `vite build` → `dist/<slug>/`, all decks in parallel. Each is a build of the shared shell in `src/deck`, pointed at that deck's slides by the `DECK` variable that `vite.config.ts` reads. A deck that fails is dropped from the remaining stages and makes the build exit non-zero.
 
    **The base is relative (`./`), not `/<slug>/`.** A deck's assets only ever sit beside it, and an absolute base pins the whole site to the root of a domain — which is what makes it servable from `<user>.github.io/tech-talk/` as well as from `slides.naturalclar.dev/`. Do not "fix" this back to an absolute path.
