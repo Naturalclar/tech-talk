@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { parsePublishedAt } from './published-at.ts'
 
 export interface ExternalTalk {
   title: string
@@ -7,6 +8,9 @@ export interface ExternalTalk {
   // Optional: a talk hosted elsewhere may have no image to point at, and the
   // card reserves the space rather than collapsing.
   thumbnail?: string
+  // The same field name a deck's meta.json uses, for the same reason: it is
+  // shown on the card and it decides where the card lands in the listing.
+  publishedAt?: string
 }
 
 const source = path.join(
@@ -50,6 +54,10 @@ export const loadExternalTalks = (): ExternalTalk[] => {
         `src/external-talks.json[${i}] (${talk.title}) has a non-string thumbnail`
       )
     }
+    parsePublishedAt(
+      talk.publishedAt,
+      `src/external-talks.json[${i}] (${talk.title})`
+    )
   })
 
   return parsed

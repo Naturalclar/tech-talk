@@ -1,14 +1,17 @@
 [
   {
     "title": "Code Surfer v3",
-    "url": "https://code-surfer-v3.naturalclar.vercel.app/"
+    "url": "https://code-surfer-v3.naturalclar.vercel.app/",
+    "publishedAt": "2019-08-30"
   },
   {
     "title": "You May Not Need Thunk",
-    "url": "https://you-may-not-need-thunk.naturalclar.vercel.app/"
+    "url": "https://you-may-not-need-thunk.naturalclar.vercel.app/",
+    "publishedAt": "2019-09-02"
   },
   {
     "title": "Visual Regression Test with React Native",
-    "url": "https://visual-regression-test-with-react-native.naturalclar.vercel.app/"
+    "url": "https://visual-regression-test-with-react-native.naturalclar.vercel.app/",
+    "publishedAt": "2019-09-03"
   }
 ]

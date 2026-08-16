@@ -5,6 +5,7 @@ import { renderCard } from './card.ts'
 import { parseMeta } from './deck-meta.ts'
 import { loadExternalTalks } from './external-talks.ts'
 import { fetchOgImage } from './og-image.ts'
+import { byNewest } from './published-at.ts'
 
 const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -45,9 +46,17 @@ const main = async () => {
   // keeps the two in step, and a mismatch is invisible: the deck builds, and
   // only the OG image, oEmbed link and canonical URL end up pointing at files
   // that were never written. Refuse to build instead.
-  const mismatched = decks
-    .map((deck) => ({ deck, meta: parseMeta(deck.dir, deck.slug) }))
-    .filter(({ deck, meta }) => meta.slug !== deck.slug)
+  const described = decks.map((deck) => ({
+    deck,
+    meta: parseMeta(deck.dir, deck.slug),
+  }))
+
+  const metaFor = (slug: string) =>
+    described.find(({ deck }) => deck.slug === slug)!.meta
+
+  const mismatched = described.filter(
+    ({ deck, meta }) => meta.slug !== deck.slug
+  )
   if (mismatched.length) {
     mismatched.forEach(({ deck, meta }) => {
       console.error(
@@ -104,34 +113,44 @@ const main = async () => {
     )
   )
 
-  const cards = await Promise.all(
-    built.map((deck) =>
-      run(`pnpm run --silent build:index ${deck.slug} ${deck.dir}`)
-    )
+  const deckCards = await Promise.all(
+    built.map(async (deck) => ({
+      html: await run(`pnpm run --silent build:index ${deck.slug} ${deck.dir}`),
+      publishedAt: metaFor(deck.slug).publishedAt,
+    }))
   )
 
   // Talks hosted elsewhere are rendered straight from their definition —
-  // there is nothing to build or serve for them. They go after the decks in
-  // this repository, in the order the file lists them.
+  // there is nothing to build or serve for them.
   //
   // A card still wants a thumbnail, and there is no screenshot in dist/ to
   // use. The linked page already declares one for every other link unfurler,
   // so that og:image is fetched here. An explicit thumbnail in the JSON wins:
   // it is the way to override a page whose og:image is wrong or missing.
   const talks = loadExternalTalks()
-  const external = await Promise.all(
-    talks.map(async (talk) =>
-      renderCard({
+  const externalCards = await Promise.all(
+    talks.map(async (talk) => ({
+      html: renderCard({
         external: true,
         href: talk.url,
+        publishedAt: talk.publishedAt || null,
         thumbnail: talk.thumbnail || (await fetchOgImage(talk.url)),
         title: talk.title,
-      })
-    )
+      }),
+      publishedAt: talk.publishedAt || null,
+    }))
   )
-  if (external.length) {
-    console.log(`[index] ${external.length} external talk(s) listed`)
+  if (externalCards.length) {
+    console.log(`[index] ${externalCards.length} external talk(s) listed`)
   }
+
+  // The two kinds are interleaved by date rather than kept in separate
+  // blocks: the cards show when each talk was given, and a listing that
+  // shows dates in any other order reads as unsorted. Where a talk is
+  // hosted is not something a visitor is ordering by.
+  const cards = byNewest(deckCards.concat(externalCards)).map(
+    (card) => card.html
+  )
 
   const template = fs.readFileSync(
     path.join(import.meta.dirname, '..', 'src', 'index.html'),
@@ -139,7 +158,7 @@ const main = async () => {
   )
   fs.writeFileSync(
     path.join(import.meta.dirname, '..', 'dist', 'index.html'),
-    template.replace('<!--REPLACE_ME-->', cards.concat(external).join('')),
+    template.replace('<!--REPLACE_ME-->', cards.join('')),
     'utf8'
   )
 
