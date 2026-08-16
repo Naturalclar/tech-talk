@@ -118,3 +118,7 @@ Prettier: no semicolons, single quotes, 2-space tabs, ES5 trailing commas. `no-c
 The stack is current: ReMDX 20, React 19, vite, TypeScript 7, oxlint, prettier 3, Tailwind 4.
 
 Because pnpm does not hoist, everything the repo's own files import has to be declared in `package.json` — `rimraf` and `cpx2` are shelled out to by `generate-slides.ts`, and `@types/node` is needed by `tsc` for `scripts/`.
+
+`pnpm.overrides` in `package.json` pins three transitive packages (`path-parse`, `hosted-git-info@2`, `ini@1`) past their advisories. They are pulled in deep in the tree by build tooling, so no direct dependency bump reaches them; the overrides are the only lever. Remove an entry once nothing resolves to the vulnerable range anymore — `pnpm why <pkg>` says who is still asking for it.
+
+Dependabot runs from the repository's security settings, not a `.github/dependabot.yml`, and its open PRs all date from the yarn era. Every one of them edits `yarn.lock`, which no longer exists, so **none of them can be merged**; the fix for anything they report is a direct bump or an override here.
