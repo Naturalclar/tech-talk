@@ -157,6 +157,10 @@ TypeScript 7 is the native (Go) compiler — `node_modules/typescript/bin/tsc` i
 
 Because pnpm does not hoist, everything the repo's own files import has to be declared in `package.json` — `rimraf` and `cpx2` are shelled out to by `generate-slides.ts`, and `@types/node` is needed by `tsc` for `scripts/`.
 
-`pnpm.overrides` in `package.json` pins three transitive packages (`path-parse`, `hosted-git-info@2`, `ini@1`) past their advisories. They are pulled in deep in the tree by build tooling, so no direct dependency bump reaches them; the overrides are the only lever. Remove an entry once nothing resolves to the vulnerable range anymore — `pnpm why <pkg>` says who is still asking for it.
+`pnpm.overrides` in `package.json` pins two transitive packages past their advisories: `ini@1` (scaffdog → update-notifier → rc) and `minimist` (both cpx2 and that same scaffdog chain). They are pulled in deep in the tree, so no direct dependency bump reaches them; the overrides are the only lever. Remove an entry once nothing resolves to the vulnerable range anymore — `pnpm why <pkg>` says who is still asking for it, and `path-parse` and `hosted-git-info@2` were dropped that way when the package that wanted them left.
+
+**Check whether a dependency is used before assuming it is.** `npm-run-all` sat in `devDependencies` unreferenced by any script, and was on its own responsible for 13 of the 21 advisories `pnpm audit` reported — including a critical one — plus the entire subtree those two removed overrides existed for.
+
+What `pnpm audit` still reports comes through `@nkzw/vite-plugin-remdx`'s MDX toolchain (`kind-of`, `js-yaml`, `debug`). The plugin is current, so there is nothing to bump; it runs at build time over this repository's own MDX.
 
 `.github/dependabot.yml` declares the `npm` ecosystem — that is the name Dependabot uses for the whole npm registry family, there is no separate `pnpm` value, and it reads `pnpm-lock.yaml` from it. It was added after the 21 PRs Dependabot had opened from the repository's security settings alone all turned out to edit the deleted `yarn.lock`, which made every one of them unmergeable. Minor and patch bumps are grouped into a single weekly PR; majors come one at a time.
