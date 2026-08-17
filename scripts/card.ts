@@ -36,10 +36,19 @@ export const renderCard = ({
   publishedAt,
   external,
 }: Card): string => {
-  // A talk on another site may not have a usable thumbnail URL. Reserving the
-  // same space keeps the grid rows even instead of letting one card collapse.
+  // Every thumbnail gets the same 16:9 box, whatever the source image is.
+  // A deck's screenshot is 1280x720 and lands in it exactly; a talk hosted
+  // elsewhere contributes whatever its og:image happens to be — 1200x630 is
+  // the usual OG size, and the older decks' card.png is something else again
+  // — and without a fixed box each one set its own card's height, so the
+  // grid rows came out uneven.
+  //
+  // object-contain rather than object-cover: these are cards with text on
+  // them, made to be read whole, and the aspect ratio of a page nobody here
+  // controls is not something to bet on. Letterboxing against the same grey
+  // as the placeholder loses nothing.
   const image = thumbnail
-    ? `<img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="w-full" />`
+    ? `<img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="aspect-video w-full bg-gray-100 object-contain" />`
     : `<div class="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
 
   // Date and badge share a row: they are both "about" the talk rather than
