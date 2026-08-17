@@ -36,19 +36,25 @@ export const renderCard = ({
   publishedAt,
   external,
 }: Card): string => {
-  // Every thumbnail gets the same 16:9 box, whatever the source image is.
-  // A deck's screenshot is 1280x720 and lands in it exactly; a talk hosted
-  // elsewhere contributes whatever its og:image happens to be — 1200x630 is
-  // the usual OG size, and the older decks' card.png is something else again
-  // — and without a fixed box each one set its own card's height, so the
-  // grid rows came out uneven.
+  // The 16:9 box belongs to the div, and the image is stretched inside it.
+  // Putting the ratio on the <img> instead leaves the height depending on
+  // how a browser reconciles aspect-ratio with the file's own dimensions,
+  // and on the image having loaded at all — here the box is the same size
+  // before the request finishes, after it fails, and for the placeholder.
+  //
+  // It has to be a fixed box because the sources do not agree: a deck's
+  // screenshot is 1280x720, an og:image fetched from someone else's page is
+  // whatever they made it (1200x630 is typical), and each one used to set
+  // its own card's height.
   //
   // object-contain rather than object-cover: these are cards with text on
   // them, made to be read whole, and the aspect ratio of a page nobody here
   // controls is not something to bet on. Letterboxing against the same grey
   // as the placeholder loses nothing.
   const image = thumbnail
-    ? `<img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="aspect-video w-full bg-gray-100 object-contain" />`
+    ? `<div class="relative aspect-video w-full bg-gray-100">
+              <img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="absolute inset-0 h-full w-full object-contain" />
+            </div>`
     : `<div class="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
 
   // Date and badge share a row: they are both "about" the talk rather than
@@ -79,7 +85,7 @@ export const renderCard = ({
           >
             ${image}
             <div class="p-4">
-              <h2 class="text-lg font-medium text-gray-900">
+              <h2 class="min-h-14 text-lg font-medium text-gray-900">
                 ${escapeText(title)}
               </h2>${footer}
             </div>
