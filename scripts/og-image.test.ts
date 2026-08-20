@@ -70,6 +70,19 @@ const FIXTURES: { [path: string]: string } = {
     <meta property="og:image" content="http://127.0.0.1:1/img/nowhere.png"/>
   </head></html>`,
 
+  // A deck that moved into a sub-directory. Its og:image still names the
+  // root of the host it used to have to itself, and the file now sits beside
+  // the page rather than at the top of the new host.
+  '/talk/moved-to-subdir': `<html><head>
+    <meta property="og:image" content="http://127.0.0.1:1/card.png"/>
+  </head></html>`,
+
+  // The same shape, but the file really is at the root of the new host —
+  // which is what the three 2019 talks look like.
+  '/moved-to-root': `<html><head>
+    <meta property="og:image" content="http://127.0.0.1:1/img/card.png"/>
+  </head></html>`,
+
   // Same origin, image simply deleted — there is nowhere else to look.
   '/image-404': `<html><head>
     <meta property="og:image" content="/img/deleted.png"/>
@@ -98,8 +111,9 @@ const main = async () => {
     const url = req.url || '/'
     const method = req.method || 'GET'
 
-    // Sits beside /nested/dot-relative, so a relative og:image lands on it.
-    if (url === '/nested/card.png') {
+    // Sits beside /nested/dot-relative and /talk/moved-to-subdir, so a
+    // relative og:image — or the directory fallback — lands on it.
+    if (url === '/nested/card.png' || url === '/talk/card.png') {
       res.writeHead(200, { 'Content-Type': 'image/png' })
       res.end(method === 'HEAD' ? undefined : Buffer.from([0x89, 0x50]))
       return
@@ -205,6 +219,16 @@ const main = async () => {
     '...but only when that path is really there',
     await at('/moved-and-gone'),
     null
+  )
+  check(
+    'a deck in a sub-directory looks beside itself, not at the root',
+    await at('/talk/moved-to-subdir'),
+    `${origin}/talk/card.png`
+  )
+  check(
+    '...and still falls back to the root when that is where the file is',
+    await at('/moved-to-root'),
+    img
   )
   check('a deleted image on the same origin', await at('/image-404'), null)
   check(
