@@ -132,7 +132,7 @@ A deck's built `index.html` is a shell — vite emits the slides as JavaScript, 
 
 Every deck starts with the same preamble (see `.scaffdog/template.md`): `export { Themes } from '../../deck/Themes.tsx';`. Slides are separated by `---`, and a slide may open with a `--` block of per-slide data (`image:`, `theme:`).
 
-**Don't use `<CodeSurfer>` in a new deck.** It is what breaks static HTML generation, and a deck that falls back to `--no-html` ships a bare shell — no title, no OG tags, no slide content for anything that doesn't run JavaScript. Show code in a plain fenced block instead; the scaffold includes one. This is a deliberate convention rather than a limitation of the syntax: the four existing decks that use `<CodeSurfer>` are in that broken state and are left as they are, while a deck scaffolded today renders its metadata and its slides into the HTML properly.
+`<CodeSurfer>` was an mdx-deck component and has no equivalent here; the ReMDX migration removed the last use of it. The one mention left in a deck is a heading in `create-your-own-slides-page` that talks _about_ the library, not a component. Code goes in a fenced block — see below.
 
 `meta.json` is what produces all OG/Twitter/oEmbed metadata — a deck without it fails the build.
 
