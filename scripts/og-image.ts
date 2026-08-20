@@ -121,28 +121,50 @@ export const fetchOgImage = async (pageUrl: string): Promise<string | null> => {
     return image
   }
 
-  // The image is almost always an asset of the deck itself, so the same path
-  // on the host that just served the page is the address it moved to.
-  const moved = sameOrigin(image, landed)
-  if (moved && (await loads(moved))) {
-    console.log(`[og] ${pageUrl}: ${moved} (og:image ${image} is gone)`)
-    return moved
+  // The image is almost always an asset of the deck itself, so where the deck
+  // is now is where the image is now.
+  for (const moved of movedWith(image, landed)) {
+    if (await loads(moved)) {
+      console.log(`[og] ${pageUrl}: ${moved} (og:image ${image} is gone)`)
+      return moved
+    }
   }
 
   console.log(`[og] ${pageUrl}: ${image} does not load`)
   return null
 }
 
-// The og:image path, re-pointed at the origin the page was served from.
-// Returns null when it already is that origin and there is nothing to try.
-const sameOrigin = (imageUrl: string, pageUrl: string): string | null => {
+// The og:image's filename, re-pointed at where the page actually lives, and
+// then at the root of the host serving it.
+//
+// The directory comes first because it is the one that survives a move: a
+// deck served from example.com/my-talk/ keeps its card.png beside itself, so
+// example.com/my-talk/card.png is the address, not example.com/card.png. The
+// root is still worth trying second — a deck that had a subdomain to itself
+// puts its assets at the top, which is exactly the shape of the three 2019
+// talks this fallback was first written for.
+const movedWith = (imageUrl: string, pageUrl: string): string[] => {
   try {
     const image = new URL(imageUrl)
     const page = new URL(pageUrl)
-    if (image.origin === page.origin) return null
-    return new URL(image.pathname + image.search, page.origin).href
+
+    const candidates = [
+      // ./card.png relative to the page, keeping any query with it.
+      new URL(
+        `.${image.pathname.slice(image.pathname.lastIndexOf('/'))}${image.search}`,
+        page
+      ).href,
+      new URL(image.pathname + image.search, page.origin).href,
+    ]
+
+    // Anything that is already the address just tried, or a duplicate of the
+    // other candidate, is not worth a second request.
+    return candidates.filter(
+      (candidate, i) =>
+        candidate !== image.href && candidates.indexOf(candidate) === i
+    )
   } catch {
-    return null
+    return []
   }
 }
 
