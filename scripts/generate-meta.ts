@@ -1,24 +1,14 @@
 import fs from 'fs'
 import path from 'path'
+import { escapeAttr, escapeText } from './escape.ts'
 import { parseMeta } from './deck-meta.ts'
 import { SITE_URL } from './site.ts'
 
-// Decks using <CodeSurfer> cannot be server rendered — the component reads
-// mdx-deck's deck context, which is null under renderToString — so those decks
-// are built with --no-html and their static markup contains no <Head> output
-// at all. Crawlers see no title, no OG image and no oEmbed link, which is
-// every deck that shows code. Writing the tags here instead of relying on the
-// render means metadata no longer depends on whether SSR happened to work.
-
-const escapeAttr = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-const escapeText = (value: string): string =>
-  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+// A built deck is a shell: vite emits the slides as JavaScript and nothing is
+// pre-rendered, so the markup carries no title, no OG image and no oEmbed
+// link of its own. Anything that does not run JavaScript — every crawler and
+// every link unfurler — would see an empty page. The tags are written in
+// here, from meta.json, rather than rendered by the deck.
 
 const main = () => {
   const [slug, deckDir] = process.argv.slice(2)
@@ -41,8 +31,9 @@ const main = () => {
   }
 
   const html = fs.readFileSync(htmlPath, 'utf8')
-  // A server rendered deck already carries these tags; leave it alone rather
-  // than emitting a second copy of everything.
+  // Nothing writes these tags but this script, so finding them means it has
+  // already run over this file — during a rebuild that skipped the vite step,
+  // say. Injecting a second copy of everything would be worse than stopping.
   if (html.indexOf('og:image') !== -1) return
 
   const meta = parseMeta(deckDir, slug)

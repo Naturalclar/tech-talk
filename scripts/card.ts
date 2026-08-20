@@ -7,6 +7,7 @@
 // names it with @source. A class assembled by concatenation would not be
 // found, and the card would render unstyled without any error.
 
+import { escapeAttr, escapeText } from './escape.ts'
 import { formatPublishedAt } from './published-at.ts'
 
 export interface Card {
@@ -18,16 +19,6 @@ export interface Card {
   publishedAt: string | null
   external?: boolean
 }
-
-const escapeAttr = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-const escapeText = (value: string): string =>
-  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 export const renderCard = ({
   title,
