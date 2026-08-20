@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { exec } from 'child_process'
+import { createHash } from 'crypto'
 import { renderCard } from './card.ts'
 import { parseMeta } from './deck-meta.ts'
 import { loadExternalTalks } from './external-talks.ts'
@@ -46,6 +47,28 @@ const siteMeta = (): string =>
     `<meta name="twitter:description" content="${escapeAttr(SITE_DESCRIPTION)}"/>`,
     `<meta name="twitter:image" content="${SITE_IMAGE}"/>`,
   ].join('\n    ')
+
+// The decks' assets are content-hashed by vite; the landing page's stylesheet
+// was not, so a returning visitor kept the old one until their cache expired.
+// That bit during development more than once — a deploy that looked like it
+// had not happened — and it bites visitors the same way every time a talk is
+// added. Renaming the file after Tailwind writes it makes the address change
+// whenever the bytes do.
+//
+// dist/index.html itself cannot carry a hash, and its caching is GitHub
+// Pages' to decide. Pinning the stylesheet at least rules out new markup
+// being styled by an old sheet.
+const fingerprintStylesheet = (dist: string): string => {
+  const built = path.join(dist, 'index.css')
+  const hash = createHash('sha256')
+    .update(fs.readFileSync(built))
+    .digest('hex')
+    .slice(0, 8)
+
+  const name = `index-${hash}.css`
+  fs.renameSync(built, path.join(dist, name))
+  return `<link rel="stylesheet" href="./${name}" />`
+}
 
 // A deck is a directory under src/talks holding slides.re.mdx and meta.json.
 const listDecks = (dir: string): string[] =>
@@ -180,9 +203,11 @@ const main = async () => {
     path.join(import.meta.dirname, '..', 'src', 'index.html'),
     'utf8'
   )
+  const dist = path.join(import.meta.dirname, '..', 'dist')
   fs.writeFileSync(
-    path.join(import.meta.dirname, '..', 'dist', 'index.html'),
+    path.join(dist, 'index.html'),
     template
+      .replace('<!--REPLACE_STYLESHEET-->', fingerprintStylesheet(dist))
       .replace('<!--REPLACE_META-->', siteMeta())
       .replace('<!--REPLACE_ME-->', cards.join('')),
     'utf8'
