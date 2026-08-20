@@ -5,7 +5,9 @@ import { renderCard } from './card.ts'
 import { parseMeta } from './deck-meta.ts'
 import { loadExternalTalks } from './external-talks.ts'
 import { fetchOgImage } from './og-image.ts'
+import { escapeAttr, escapeText } from './escape.ts'
 import { byNewest } from './published-at.ts'
+import { SITE_DESCRIPTION, SITE_IMAGE, SITE_TITLE, SITE_URL } from './site.ts'
 
 const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -21,6 +23,29 @@ const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
       }
     )
   })
+
+// The listing's own <head>. Every deck gets this written in by
+// generate-meta.ts from its meta.json; the page that links them all had a
+// placeholder <title> and nothing else, so sharing the site produced an
+// untitled link with no image.
+const siteMeta = (): string =>
+  [
+    `<title>${escapeText(SITE_TITLE)}</title>`,
+    `<meta name="description" content="${escapeAttr(SITE_DESCRIPTION)}"/>`,
+    `<link rel="canonical" href="${SITE_URL}/"/>`,
+    `<meta property="og:type" content="website"/>`,
+    `<meta property="og:locale" content="ja_JP"/>`,
+    `<meta property="og:site_name" content="${escapeAttr(SITE_TITLE)}"/>`,
+    `<meta property="og:title" content="${escapeAttr(SITE_TITLE)}"/>`,
+    `<meta property="og:description" content="${escapeAttr(SITE_DESCRIPTION)}"/>`,
+    `<meta property="og:url" content="${SITE_URL}/"/>`,
+    `<meta property="og:image" content="${SITE_IMAGE}"/>`,
+    // The screenshot is 1280x720, which is what summary_large_image wants.
+    `<meta name="twitter:card" content="summary_large_image"/>`,
+    `<meta name="twitter:title" content="${escapeAttr(SITE_TITLE)}"/>`,
+    `<meta name="twitter:description" content="${escapeAttr(SITE_DESCRIPTION)}"/>`,
+    `<meta name="twitter:image" content="${SITE_IMAGE}"/>`,
+  ].join('\n    ')
 
 // A deck is a directory under src/talks holding slides.re.mdx and meta.json.
 const listDecks = (dir: string): string[] =>
@@ -157,9 +182,22 @@ const main = async () => {
   )
   fs.writeFileSync(
     path.join(import.meta.dirname, '..', 'dist', 'index.html'),
-    template.replace('<!--REPLACE_ME-->', cards.join('')),
+    template
+      .replace('<!--REPLACE_META-->', siteMeta())
+      .replace('<!--REPLACE_ME-->', cards.join('')),
     'utf8'
   )
+
+  // The landing page's og:image is a screenshot of the landing page, so it
+  // can only be taken now that the page exists. That is a second browser
+  // launch, which is why it is not folded into stage 3.
+  try {
+    await run(`pnpm run build:screenshot .`)
+  } catch (err) {
+    // A missing og:image is a worse card, not a broken site.
+    console.error(`[screenshot] index failed\n${(err as Error).message}`)
+    process.exitCode = 1
+  }
 
   if (failed.length) {
     console.error(

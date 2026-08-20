@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { escapeAttr, escapeText } from './escape.ts'
 import { parseMeta } from './deck-meta.ts'
 import { SITE_URL } from './site.ts'
 
@@ -9,16 +10,6 @@ import { SITE_URL } from './site.ts'
 // at all. Crawlers see no title, no OG image and no oEmbed link, which is
 // every deck that shows code. Writing the tags here instead of relying on the
 // render means metadata no longer depends on whether SSR happened to work.
-
-const escapeAttr = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-const escapeText = (value: string): string =>
-  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 const main = () => {
   const [slug, deckDir] = process.argv.slice(2)

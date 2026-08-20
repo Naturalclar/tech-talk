@@ -94,24 +94,36 @@ const startServer = (): Promise<{ port: number; close: () => void }> =>
     })
   })
 
+// This argument shoots the landing page rather than a deck: a separate
+// invocation, because dist/index.html is written in the last stage, long
+// after the decks have been shot. It is `.` and not `--index` because pnpm
+// eats leading-dash arguments on their way to a script — the same trap that
+// once sent every deck's build output into the root of dist/.
+const INDEX = '.'
+
 const shoot = async (page: Page, port: number, slug: string): Promise<void> => {
-  await page.goto(`http://127.0.0.1:${port}/${slug}/`, {
+  const index = slug === INDEX
+
+  await page.goto(`http://127.0.0.1:${port}/${index ? '' : `${slug}/`}`, {
     waitUntil: 'networkidle',
     timeout: 30000,
   })
 
   // The decks render client side, so an empty #root means the slide has not
-  // been painted yet and the screenshot would come out blank.
-  await page.waitForFunction(
-    () => {
-      const root = document.getElementById('root')
-      return !!root && root.childElementCount > 0
-    },
-    { timeout: 30000 }
-  )
+  // been painted yet and the screenshot would come out blank. The landing
+  // page is plain HTML written by the build; it has no #root to wait on.
+  if (!index) {
+    await page.waitForFunction(
+      () => {
+        const root = document.getElementById('root')
+        return !!root && root.childElementCount > 0
+      },
+      { timeout: 30000 }
+    )
+  }
 
   await page.screenshot({
-    path: path.join(distDir, `${slug}.png`),
+    path: path.join(distDir, `${index ? 'index' : slug}.png`),
     clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT },
   })
 }
@@ -119,7 +131,7 @@ const shoot = async (page: Page, port: number, slug: string): Promise<void> => {
 const main = async () => {
   const slugs = process.argv.slice(2)
   if (!slugs.length) {
-    console.log('usage: ./generate-screenshot [slug...]')
+    console.log(`usage: ./generate-screenshot [slug... | ${INDEX}]`)
     process.exitCode = 1
     return
   }
@@ -139,7 +151,7 @@ const main = async () => {
     for (const slug of slugs) {
       try {
         await shoot(page, server.port, slug)
-        console.log(`[screenshot] ${slug}.png`)
+        console.log(`[screenshot] ${slug === INDEX ? 'index' : slug}.png`)
       } catch (err) {
         console.error(`[screenshot] failed: ${slug}`, (err as Error).message)
         process.exitCode = 1

@@ -54,6 +54,10 @@ The orchestrator shells out to the other npm-scripts. One rule that is easy to g
 
 Binaries that aren't wrapped in a script (`rimraf`, `cpx`) are invoked with `pnpm exec`.
 
+### HTML is assembled by hand
+
+There is no template engine. Cards and meta tags are string literals in `scripts/`, so anything interpolated into them goes through `escapeAttr` or `escapeText` from `scripts/escape.ts`. Three modules need them — `card.ts`, `generate-meta.ts`, `generate-slides.ts` — and two of them used to carry their own copy.
+
 ## Architecture
 
 ### The slug convention holds everything together
@@ -79,7 +83,10 @@ Collects the directories under `src/talks` that contain `slides.re.mdx`, then ru
 3. `generate-screenshot.ts <slug...>` → `dist/<slug>.png`, one process for every deck. It serves `dist/` and drives one browser for the whole set rather than paying that cost per slide.
 4. `generate-meta.ts <slug> <deck-dir>` writes the OG/Twitter/oEmbed tags and the `<title>` into `dist/<slug>/index.html`.
 5. `generate-oembed.ts <slug> <deck-dir>` → `dist/<slug>/oembed.json`.
-6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, renders a card for each entry in `src/external-talks.json` — fetching each of those pages' `og:image` for its thumbnail — sorts the two kinds together by `publishedAt`, and writes `dist/index.html` once, substituting the `<!--REPLACE_ME-->` marker in `src/index.html`. **This stage reaches the network**, which is the only one that does.
+6. `generate-index.ts <slug> <deck-dir>` emits a card `<a>` per deck; the parent collects them, renders a card for each entry in `src/external-talks.json` — fetching each of those pages' `og:image` for its thumbnail — sorts the two kinds together by `publishedAt`, and writes `dist/index.html` once, substituting two markers in `src/index.html`: `<!--REPLACE_META-->` with the landing page's own `<head>` tags, and `<!--REPLACE_ME-->` with the cards. **This stage reaches the network**, which is the only one that does.
+7. `generate-screenshot.ts .` → `dist/index.png`, the landing page's `og:image`. The argument is `.` rather than `--index` because **pnpm eats leading-dash arguments on their way to a script**; the same trap once sent every deck's output into the root of `dist/`. This is a second browser launch, which is the price of the image being a screenshot of a page that is only written in stage 6. A failure here is logged and fails the build, but the page itself is already complete.
+
+The landing page's title, description and image come from `scripts/site.ts` — `SITE_TITLE`, `SITE_DESCRIPTION`, `SITE_IMAGE` — beside the `SITE_URL` everything else already uses. A deck's metadata comes from its own `meta.json`; the page that lists them has no `meta.json`, so it lives there.
 
 ### `publishedAt` orders the landing page
 
