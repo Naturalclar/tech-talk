@@ -68,7 +68,7 @@ jobs:
       # ever published, so a pull request stops at the artifact above.
       - name: Package for Pages
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
