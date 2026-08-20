@@ -15,3 +15,31 @@
   max-height: 70vh;
   max-width: 100%;
 }
+
+/* remdx sets a 36px base and `pre { font-size: 1em }`, so code renders at the
+   same size as prose: about 52 columns across, and nine or ten lines under a
+   heading. Nothing here wraps or scrolls either — `white-space: pre` with
+   `overflow: visible` — so the rest of a sample simply left the slide with no
+   way to reach it. Every deck written before the ReMDX migration assumed
+   CodeSurfer, which scaled code down to fit; these are the same samples with
+   that scaling gone.
+
+   0.5em is the size at which the widest line in any deck here (76 columns)
+   clears 1280px with room to spare. Wrapping is not the alternative: broken
+   indentation reads worse than a scrollbar.
+
+   The height cap is the backstop for what size alone cannot fix. Four of
+   these samples are 45 to 75 lines long and will not fit at any legible size,
+   so they scroll — reachable rather than truncated. 60vh leaves the heading
+   above them visible.
+
+   max-width is what makes `overflow: auto` mean anything horizontally. A
+   slide is a flex column, so a `pre` with a long line grows to fit it and
+   takes the box off the side of the screen instead of scrolling inside it —
+   the same stretching that used to blow images up to the full slide width. */
+#root pre {
+  font-size: 0.5em;
+  max-height: 60vh;
+  max-width: 100%;
+  overflow: auto;
+}
