@@ -10,19 +10,57 @@ const HEIGHT = 720
 const distDir = path.join(import.meta.dirname, '..', 'dist')
 const fontsDir = path.join(import.meta.dirname, '..', 'fonts')
 
-// Nearly every deck title is Japanese, and a machine with no Japanese font
-// renders those titles as tofu boxes. Rather than rely on the build image
-// having one — Netlify's cannot be given system packages — the repository
-// carries IPAGothic and fontconfig is pointed at it here.
+// Chinese and Korean fonts cover most of the Japanese a deck uses, so a build
+// machine that has one renders the titles in it: Chinese glyph shapes, and
+// the kana iteration marks ゝ and ゞ drawn as nothing at all, because those
+// fonts map them without an outline. That is not hypothetical — it is how
+// 「すゝめ」 came out on the published landing page.
 //
-// The system configuration is included rather than replaced. Listing font
+// Which font wins is decided by whatever the machine happens to have
+// installed, which is exactly what carrying ipag.ttf in the repository was
+// meant to stop. Adding a directory only makes the bundled font available;
+// it does not make it the one that gets picked.
+//
+// So the ones that would shadow it are taken out of this process's view.
+// Naming families is blunt, and a machine with a CJK font not on this list
+// falls back to the old behaviour — no worse than before, just not fixed.
+// The alternative, preferring IPAGothic outright, was tried and rejected:
+// fontconfig then hands it the Latin text too, and every screenshot's
+// English turns monospace.
+const SHADOWING_CJK_FONTS = [
+  'WenQuanYi Zen Hei',
+  'WenQuanYi Zen Hei Mono',
+  'WenQuanYi Zen Hei Sharp',
+  'WenQuanYi Micro Hei',
+  'Noto Sans CJK SC',
+  'Noto Sans CJK TC',
+  'Noto Sans CJK HK',
+  'Noto Sans CJK KR',
+  'Noto Serif CJK SC',
+  'Noto Serif CJK TC',
+  'Noto Serif CJK KR',
+  'Source Han Sans',
+  'Source Han Serif',
+  'Droid Sans Fallback',
+  'AR PL UMing CN',
+  'AR PL UKai CN',
+]
+
+// Nearly every deck title is Japanese, and a machine with no Japanese font at
+// all renders those titles as tofu boxes. The deployed site is built on a
+// machine nobody here provisions, so the font travels with the repository.
+//
+// The system configuration is included rather than replaced: listing font
 // directories alone would drop the distribution's family aliases with them,
-// and sans-serif would start resolving to IPAGothic's Latin glyphs instead of
-// whatever it picks today. Adding one directory on top leaves that untouched:
-// the bundled font is only reached for glyphs nothing else provides.
+// and Latin text would start coming from IPAGothic.
 const useBundledFonts = (): void => {
   const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fontconfig-'))
   const configPath = path.join(cacheDir, 'fonts.conf')
+
+  const rejected = SHADOWING_CJK_FONTS.map(
+    (family) =>
+      `    <rejectfont><pattern><patelt name="family"><string>${family}</string></patelt></pattern></rejectfont>`
+  ).join('\n')
 
   fs.writeFileSync(
     configPath,
@@ -32,6 +70,9 @@ const useBundledFonts = (): void => {
   <include ignore_missing="yes">/etc/fonts/fonts.conf</include>
   <dir>${fontsDir}</dir>
   <cachedir>${cacheDir}</cachedir>
+  <selectfont>
+${rejected}
+  </selectfont>
 </fontconfig>
 `,
     'utf8'

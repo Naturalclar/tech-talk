@@ -46,6 +46,8 @@ Two consequences follow from that, and both are easy to trip over:
 
 **The Japanese font that screenshots render with is committed to the repo**, at `fonts/ipag.ttf`. Deck titles are almost all Japanese, and a machine without a Japanese font draws them as tofu boxes; the deployed site is built on a machine nobody here provisions, so the font travels with the repository instead. `generate-screenshot.ts` writes a fontconfig file that _includes_ `/etc/fonts/fonts.conf` and adds `fonts/` to it — replacing the system config instead would discard the distribution's family aliases and quietly change what Latin text renders with. This affects screenshots only; visitors' browsers render the decks with their own fonts.
 
+**Adding the directory is not enough to make the bundled font the one that gets used**, which is the whole point of carrying it. A Chinese or Korean font covers most of the Japanese a deck uses, so a build machine that has one wins the match: Chinese glyph shapes, and the kana iteration marks `ゝ` and `ゞ` drawn as nothing, because those fonts map them without an outline. That shipped — 「すゝめ」 came out as 「す め」 on the landing page's own `og:image`. The config therefore rejects the families that would shadow it, listed in `SHADOWING_CJK_FONTS`. It is a list of names, so a machine with a CJK font that is not on it falls back to the old behaviour; add the name when that happens. Preferring IPAGothic outright instead was tried and is wrong — fontconfig then hands it the Latin text too, and every screenshot's English turns monospace.
+
 ### Calling scripts from `generate-slides.ts`
 
 The orchestrator shells out to the other npm-scripts. One rule that is easy to get wrong:
