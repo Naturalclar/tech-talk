@@ -9,6 +9,7 @@ import { fetchOgImage } from './og-image.ts'
 import { escapeAttr, escapeText } from './escape.ts'
 import { byNewest } from './published-at.ts'
 import { SITE_DESCRIPTION, SITE_IMAGE, SITE_TITLE, SITE_URL } from './site.ts'
+import { renderRobots, renderSitemap } from './sitemap.ts'
 
 const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -195,9 +196,8 @@ const main = async () => {
   // blocks: the cards show when each talk was given, and a listing that
   // shows dates in any other order reads as unsorted. Where a talk is
   // hosted is not something a visitor is ordering by.
-  const cards = byNewest(deckCards.concat(externalCards)).map(
-    (card) => card.html
-  )
+  const listed = byNewest(deckCards.concat(externalCards))
+  const cards = listed.map((card) => card.html)
 
   const template = fs.readFileSync(
     path.join(import.meta.dirname, '..', 'src', 'index.html'),
@@ -212,6 +212,29 @@ const main = async () => {
       .replace('<!--REPLACE_ME-->', cards.join('')),
     'utf8'
   )
+
+  // Nothing links to a deck except the landing page, and the decks link
+  // nowhere at all — they render in the browser, so a crawler that does not
+  // run scripts sees an empty shell. A sitemap is the only thing telling one
+  // that the eight deck URLs exist.
+  //
+  // lastmod is the date the talk was given, not the date of the build. It is
+  // the closest thing to "when this page's content changed", and it does not
+  // move every deploy, which a build timestamp would — telling crawlers the
+  // whole site changed daily when nothing did.
+  const entries = [
+    { lastmod: listed[0] ? listed[0].publishedAt : null, path: '/' },
+    ...byNewest(
+      built.map((deck) => ({
+        lastmod: metaFor(deck.slug).publishedAt,
+        path: `/${deck.slug}/`,
+        publishedAt: metaFor(deck.slug).publishedAt,
+      }))
+    ),
+  ]
+  fs.writeFileSync(path.join(dist, 'sitemap.xml'), renderSitemap(entries))
+  fs.writeFileSync(path.join(dist, 'robots.txt'), renderRobots())
+  console.log(`[sitemap] ${entries.length} url(s)`)
 
   // The landing page's og:image is a screenshot of the landing page, so it
   // can only be taken now that the page exists. That is a second browser
