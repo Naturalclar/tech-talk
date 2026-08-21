@@ -42,11 +42,17 @@ export const renderCard = ({
   // them, made to be read whole, and the aspect ratio of a page nobody here
   // controls is not something to bet on. Letterboxing against the same grey
   // as the placeholder loses nothing.
+  //
+  // The thumbnail sits inset from the card with a border of its own. Bled to
+  // the card's edge it read as the card's own lid rather than as a picture of
+  // something, and a letterboxed image had no edge at all where its grey met
+  // the white below it. mb-0 keeps the gap to the title the padding of the
+  // block underneath, so it does not double up.
   const image = thumbnail
-    ? `<div class="relative aspect-video w-full bg-gray-100">
+    ? `<div class="relative m-4 mb-0 aspect-video overflow-hidden rounded-md border border-gray-200 bg-gray-100">
               <img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="absolute inset-0 h-full w-full object-contain" />
             </div>`
-    : `<div class="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
+    : `<div class="m-4 mb-0 flex aspect-video items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
 
   // Date and badge share a row: they are both "about" the talk rather than
   // part of its title, and stacking them would make external cards taller
@@ -69,10 +75,17 @@ export const renderCard = ({
             rel="noopener noreferrer"`
     : ''
 
+  // The card's own edge is drawn at gray-300 rather than gray-200: a card has
+  // to look like a card before the pointer is anywhere near it.
+  //
+  // Hover thickens that edge with a ring instead of raising border-width. A
+  // ring is a box-shadow, so it costs no layout — bumping the border to 2px
+  // would take two pixels out of the card's content box and reflow the title
+  // under the cursor, which is exactly where a jump is most obvious.
   return `
           <a
             href="${escapeAttr(href)}"${target}
-            class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 transition hover:border-gray-300 hover:shadow-md"
+            class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-300 transition hover:border-gray-400 hover:shadow-md hover:ring-1 hover:ring-gray-400"
           >
             ${image}
             <div class="p-4">
