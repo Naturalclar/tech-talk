@@ -149,6 +149,10 @@ Assets are shared across decks from `src/talks/assets/` and referenced as plain 
 
 That resolves against the deck's own URL (`/<slug>/`), which is why `dist/assets` has to exist before the screenshots run. Code is shown in fenced blocks — the plugin highlights them with shiki, and `\`\`\`js {5-7}` highlights a line range.
 
+**The whole directory is copied into `dist/`, referenced or not**, so a file nothing points at is still downloaded by whoever opens the deck beside it. Three were: they were 525KB of the 1.9MB the folder held. `grep -rl <name> src/talks` before assuming a file is in use, and delete it when it isn't.
+
+Sizes are otherwise close to what they need to be — most of these images render at more than half their pixel width, so there is nothing to reclaim by resizing. The exception was a 2762px-wide screenshot shown at 742px. **Re-encoding a PNG through a canvas usually makes it bigger**, not smaller: two of the three tried that way grew, because downscaling anti-aliases a palette image into a full-colour one. Shrinking the rest needs a real optimiser (`pngquant`, `sharp`), which is a dependency this repository does not have.
+
 ### Lint scope
 
 `pnpm run lint` is oxlint, configured by `.oxlintrc.json`. It runs the `correctness` category over `src/` and `scripts/`; `src/talks` is in `ignorePatterns`, so deck MDX files and their code snippets are never linted. `scripts/` is additionally type-checked by `tsc` (strict).
