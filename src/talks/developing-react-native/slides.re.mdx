@@ -1,0 +1,205 @@
+import { Avatar, Profile } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
+<a href="https://www.meetup.com/Osaka-Web-Designers-and-Developers-Meetup/events/264050187/">
+  <img src="../assets/logo-osaka.png" height="400" />
+</a>
+
+## Efficient react native development
+
+@naturalclar
+
+{/* Welcome to Osaka Web Designers and Developers Meetup. */}
+
+---
+
+## About Me
+
+<Avatar />
+<Profile />
+
+{/* I'll start out by introducing myself. I'm Jesse. I may not look like one, but I am an American. I came to Japan last year, and I currently work at CureApp as a Full stack engineer. */}
+
+---
+
+### What We Use
+
+<div>
+  <div
+      style={{
+        display: "flex",
+        width: "50vw",
+        justifyContent: "space-around",
+        alignItems: "center"
+      }}
+  >
+      <div>
+        <p>Server</p>
+        <img
+          src="../assets/logo-node.png"
+          width="200"
+          height="100"
+        />
+      </div>
+    <div>
+      <p>Web App</p>
+      <img
+        src="../assets/logo-react.png"
+        width="100"
+        height="100"
+      />
+      <p style={{ margin: 0, fontSize: 24 }}>react</p>
+    </div>
+    <div>
+      <p>Mobile App</p>
+      <img
+        src="../assets/logo-react.png"
+        width="100"
+        height="100"
+      />
+      <p style={{ margin: 0, fontSize: 24 }}>react native</p>
+    </div>
+</div>
+
+</div>
+
+{/* At CureApp, we build mobile applications. */}
+
+---
+
+## Everything is JavaScript!
+
+<div>
+  <img src="../assets/logo-javascript.png" width="200" height="200" />
+</div>
+
+{/* Who uses React? Who has used React Native Before? */}
+
+---
+
+### ...Well, actually in TypeScript
+
+<div>
+  <img src="../assets/logo-typescript.png" width="200" height="200" />
+</div>
+
+---
+
+### Benefits
+
+<ul>
+    <li> reusable components</li>
+    <li> reusable types</li>
+    <li>
+      <strong>Learn once, write anywhere</strong>
+    </li>
+</ul>
+
+---
+
+<img src="../assets/react-native.png" />
+
+---
+
+#### Regular React
+
+```jsx
+import React from "react";
+
+type Props = { name: string };
+
+export const HelloWorld = ({ name }: Props) => (
+  <div>
+    <p>Hello {name}!</p>
+  </div>
+);
+```
+
+---
+
+#### In React Native
+
+```jsx
+import React from "react";
+import { View, Text } from "react-native";
+
+type Props = { name: string };
+
+export const HelloWorld = ({ name }: Props) => (
+  <View>
+    <Text>Hello {name}!</Text>
+  </View>
+);
+```
+
+---
+
+### Problems with React Native
+
+<ul>
+    <li>Slow Reload</li>
+    <li>High Memory Usage</li>
+</ul>
+
+---
+
+### Solution
+
+<div style={{ display: "flex", alignItems: "center" }}>
+  <img
+    src="../assets/logo-storybook.png"
+    width="100"
+    height="100"
+  />
+  <p>Storybook with React Native Web</p>
+</div>
+
+---
+
+### React Native Web?
+
+<ul>
+    <li>Use components like `View` and `Text` in Web</li>
+    <li>Keeping same code for mobile and web</li>
+    <li>
+      <strong>Write once, use anywhere</strong>
+    </li>
+</ul>
+
+---
+
+### Storybook Driven Development
+
+<ul>
+    <li>Write Components in Web</li>
+    <li>Separate View and Logic</li>
+    <li>Fast Reload!</li>
+</ul>
+
+---
+
+### Visual Regression Test
+
+<div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <img
+      src="../assets/logo-circleci.png"
+      width="300"
+      height="150"
+    />
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <img
+        src="../assets/logo-regsuit.png"
+        width="100"
+        height="100"
+      />
+      <p>REG-SUIT</p>
+    </div>
+</div>
+
+---
+
+## Live Demo
+
+---
+
+THANK YOU

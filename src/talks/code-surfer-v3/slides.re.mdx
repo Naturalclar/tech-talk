@@ -1,0 +1,260 @@
+import { Avatar, Profile } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
+## mdx-deck v3 and code-surfer v3
+
+[WEB エンジニア勉強会 #14](https://web-engineer-meetup.connpass.com/event/141700/)
+@naturalclar
+
+{/* どうも、CircleCIチョットデキル人です。 最近はGithub Actionsも出てきてCircleCI要らなくなる疑惑もありますね。 今回はmdx-deckとcode-surfer v3について登壇させていただきます。 この発表スライドは、先程、TwitterにHashtagをつけて投稿したので、そちらからも、確認できます。 */}
+
+---
+
+## About Me
+
+<Avatar />
+<Profile />
+
+{/* まずは自己紹介です。Jesseと申します。アメリカ人です。 去年の9月に日本に引っ越してきました。 CureAppという会社で主にReact Native と TypeScript を扱った医療系のアプリを開発しています。 */}
+
+---
+
+## mdx-deck とは
+
+<a href="https://takumon.github.io/mdx-deck-sample/">
+  <img src="../assets/mdx-deck-slide.png" width="50%" />
+  <p>MDX-deck と Code-surfer でスライドを作ろう！</p>
+</a>
+
+{/* mdx-deckは簡単に言えば、markdownで簡単にスライドが作れるものです。 このスライドもmdx-deckを使って作成しています。 Code-surferと言うのは、mdx-deck内でコードを詳細に見せるプラグインです。 code-surfer, mdx-deckについては以前、この勉強会で登壇している資料がわかりやすいので、おすすめです。 今回は、v3になって追加された機能について話します。 */}
+
+---
+
+## mdx-deck v3
+
+- hooks api
+
+{/* mdx-deckのv3ではReact Hooksを使ったAPIが追加されました。 */}
+
+---
+
+## useSteps
+
+{/* 追加されたAPIの一つ。 今までもAppearと言うComponentでスライドの要素を一つ一つ出していくことは可能でしたが、 一つのページ内でもっと動きをつけたい時に使用できます。 */}
+
+---
+
+```js
+// example
+import React from "react";
+import { useSteps } from "mdx-deck";
+
+export default props => {
+  const length = 4;
+  const step = useSteps(length);
+
+  return (
+    <h2>
+      The current step is {step}/{length}
+    </h2>
+  );
+};
+```
+
+---
+
+{/* ここは mdx-deck の useSteps を実演するコンポーネントだった。 ReMDX に useSteps は無いので、実演の結果だけを載せている。 */}
+
+- apple
+- bacon
+- cat
+
+3/3
+
+---
+
+## hooks api
+
+- useDeck
+- useKeyboard
+- useSwipe
+
+{/* 他に追加されたhooks apiとしてはこのようなものがあります。 useDeckはスライドの状態を取得。 useKeyboardはキーボード入力（左右）に対してActionを起こします useSwipeはSwipeに対してActionを起こします。 */}
+
+---
+
+## code-surfer v3
+
+[PR](https://github.com/pomber/code-surfer/pull/58)
+
+---
+
+## Diff 機能
+
+---
+
+#### Code-surfer Example
+
+```js
+import React from 'react'
+
+export class Counter extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      count: 0
+    }
+  }
+
+  increment () {
+    this.setState({this.state.count+1})
+  }
+
+  render() {
+    return (
+      <div>
+        <div>count: {this.state.count}</div>
+        <button onClick={()=> {this.increment()}}>Click Me!</button>
+      </div>
+    )
+  }
+}
+```
+
+{/* 新しいCode-surferの新しいDiff機能でどのように表示されるかを紹介します。 */}
+
+---
+
+#### class component から function componentへ
+
+```js {2-20}
+import React from 'react'
+
+export class Counter extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      count: 0
+    }
+  }
+
+  increment () {
+    this.setState({this.state.count+1})
+  }
+
+  render() {
+    return (
+      <div>
+        <div>count: {this.state.count}</div>
+        <button onClick={()=> {this.increment()}}>Click Me!</button>
+      </div>
+    )
+  }
+}
+```
+
+{/* 例として、ReactのClass ComponentをHooksに変更するコードを使用します。 最近はHooksが出てかなりコードが短く出来るようになりましたね。 */}
+
+---
+
+#### classを外す
+
+```js {2-20}
+import React from 'react'
+
+export const Counter = () => {
+  constructor(props) {
+    super(props)
+    this.state = {
+      count: 0
+    }
+  }
+
+  const increment () => {
+    this.setState({this.state.count+1})
+  }
+  return (
+      <div>
+        <div>count: {this.state.count}</div>
+        <button onClick={()=> {increment()}}>Click Me!</button>
+      </div>
+  )
+
+}
+```
+
+{/* このように、変更した箇所がハイライトされます。 */}
+
+---
+
+#### stateをuseStateに変更する
+
+```js
+import React, {useState} from 'react'
+
+export const Counter = () => {
+  const [count, setCount] = useState(0)
+  
+  const increment = () => {
+    setCount(count+1)
+  }
+
+  return (
+      <div>
+        <div>count: {this.state.count}</div>
+        <button onClick={increment}>Click Me!</button>
+      </div>
+  )
+}
+```
+
+{/* Diffに自動的にフォーカスがいくので、見せたいところを見せれるようになります。 */}
+
+---
+
+#### stateをuseStateに変更する
+
+```js {1-20}
+import React, {useState} from 'react'
+
+export const Counter = () => {
+  const [count, setCount] = useState(0)
+  
+  const increment = () => {
+    setCount(count+1)
+  }
+
+  return (
+      <div>
+        <div>count: {this.state.count}</div>
+        <button onClick={increment}>Click Me!</button>
+      </div>
+  )
+}
+```
+
+{/* それにしてもおなかがすいたなぁ */}
+
+---
+
+## Presentation Mode
+
+- 先程のCodeSurferの画面で `Option`(`Alt`) + `P`
+
+{/* お手元のPCでも確認できます。 */}
+
+---
+
+### 注意点
+
+- まだ Alpha 版 (2019/08/30 現在)
+- 3.0.0-alpha.1
+- 作者が一から作り直してるので, v1 を使っていた場合、 Breaking Change しかない
+
+---
+
+楽しいスライドを楽に作ろう！
+
+---
+
+ありがとうございました。

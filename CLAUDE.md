@@ -105,6 +105,8 @@ A talk with no date sorts last rather than being dropped, and ties keep collecti
 
 The file is validated at the start of the build (`scripts/external-talks.ts`): malformed JSON, a missing title, or a `url` that isn't absolute `http(s)` fails the build rather than emitting a card that links to `undefined`. An empty array is the normal state when there is nothing external to list.
 
+**An entry comes out when the talk moves in.** `code-surfer-v3`, `you-may-not-need-thunk` and `visual-regression-test-with-react-native` were listed here as `*.vercel.app` links until the decks themselves were migrated; leaving them would have put two cards on the page for one talk. Their dates were kept as the entries had them, so the cards did not move.
+
 #### Thumbnails come from the linked page's `og:image`
 
 There is no screenshot in `dist/` for a talk this site does not serve, so `scripts/og-image.ts` fetches the page during stage 6 and reads the `og:image` it already declares for every other link unfurler (`twitter:image` is the fallback, relative values resolve against the page, and redirects resolve against where they landed). An explicit `thumbnail` in the JSON wins, and skips the fetch — that is how to override a page whose `og:image` is wrong or missing.
@@ -131,15 +133,37 @@ A deck's built `index.html` is a shell — vite emits the slides as JavaScript, 
 
 **Module-level `import` and `export` lines in a `.re.mdx` file must end with a semicolon.** The plugin lifts them out with `/^(?:import|export)[^;]+;/`; without the semicolon the line is left in the slide body, and whatever it exported silently never takes effect.
 
+### Most of the decks came from `Naturalclar/talks`
+
+Twenty-two of the thirty decks here were presented between 2019 and 2022 out of `Naturalclar/talks`, a lerna monorepo of mdx-deck decks deployed one Vercel project each. They were converted in one pass; the rules are worth knowing, because they are what a reader is looking at:
+
+- **Speaker notes are kept, as `{/* … */}`.** `<Notes>` was mdx-deck's presenter view and ReMDX has nothing like it, but the script the talk was given from is worth more in the repository than deleted. They render as nothing. A note is a JSX expression, so `{`, `}` and `*/` inside one are replaced with lookalikes rather than left to end the comment early.
+- **Each CodeSurfer step became its own slide.** CodeSurfer stepped through several versions of the same code without leaving the slide, focusing whatever changed. The steps are all here, in order, with the focus range handed to shiki instead (` ```ts {2-20} `), and the step's `subtitle` as an `####` heading above it. What is lost is the code holding still while the diff moves under it — [#151](https://github.com/Naturalclar/tech-talk/issues/151) is about building that back.
+- **`<Appear>` is unwrapped.** mdx-deck revealed its children one at a time; they all show at once now.
+- **`require('file-loader!./x.png')` became `../assets/x.png`.** Same-named images across the packages were byte-identical, so they share one copy, and `logo-js.png`/`logo-ts.png` were dropped in favour of the identical `logo-javascript.png`/`logo-typescript.png`.
+
+**`publishedAt` for these is close but not authoritative.** Each deck carried a `<Meta publishedAt>` written when it was scaffolded, a day or so before the talk, as a UTC timestamp — read in Asia/Tokyo it moves eight of them onto the following day, which is what is recorded. Two were cross-checked against the commit that added the deck and taken from that instead: `react-native-rearchitecture`, whose `<Meta>` was copy-pasted from `future-of-react-native` and still carried its date, and `release-automation`. The connpass event pages would settle all of them exactly and are linked from the first slide of most decks.
+
+`storybook-with-react-native` was **not** brought over: it is the same talk as `storybook-web-and-circleci`, which has been here since the start — RNStartup #2, 2019-02-21, the same slides down to the section order. The version in `talks` is a different revision (it has a section on `klank`, and lacks the `artifact-report.png` screenshot), not a different talk.
+
 ### Deck authoring conventions
 
 Every deck starts with the same preamble (see `.scaffdog/template.md`): `export { Themes } from '../../deck/Themes.tsx';`. Slides are separated by `---`, and a slide may open with a `--` block of per-slide data (`image:`, `theme:`).
 
 `<CodeSurfer>` was an mdx-deck component and has no equivalent here; the ReMDX migration removed the last use of it. The one mention left in a deck is a heading in `create-your-own-slides-page` that talks _about_ the library, not a component. Code goes in a fenced block — see below.
 
+**MDX 3 is stricter than the MDX 1 these decks were written against**, in two ways that bite when a deck is brought over from elsewhere:
+
+- **There are no HTML comments.** `<!-- … -->` is a parse error (`Unexpected character !`), not a comment. Use `{/* … */}`.
+- **An unknown capitalised tag is a runtime error, not markup.** MDX 1 left `<Note>` — a typo for mdx-deck's `<Notes>` — on the page; MDX 3 compiles it to a component reference and the deck renders nothing at all, with `Expected component 'Note' to be defined` on the console. The build does not catch this; only opening the deck does.
+
+Because ReMDX draws every slide into the DOM at once, opening a deck and looking for `pageerror` and for `img.naturalWidth === 0` checks the whole deck, not just the slide on screen.
+
 `meta.json` is what produces all OG/Twitter/oEmbed metadata — a deck without it fails the build.
 
-Shared React components live in `src/components` (`Layout`, `Page`, `Avatar`) and are imported as `from '../../components'`.
+Shared React components live in `src/components` and are imported as `from '../../components'`: `Layout`, `Page`, `Avatar`, and — added with the talks migration — `Profile`, `Logo`, `Title`, `Header`, `Center`, `AlignLeft`, `Link`.
+
+`Profile` is one component shared by decks given years apart, so they all name the same employer; it was edited in place in the repository they came from, and that is carried over rather than guessed at per deck. Its rules were `white` there, where the decks ran on code-surfer's dark theme — here they follow `currentColor`, because these render on the shared light one.
 
 Assets are shared across decks from `src/talks/assets/` and referenced as plain relative paths:
 
@@ -149,7 +173,9 @@ Assets are shared across decks from `src/talks/assets/` and referenced as plain 
 
 That resolves against the deck's own URL (`/<slug>/`), which is why `dist/assets` has to exist before the screenshots run. Code is shown in fenced blocks — the plugin highlights them with shiki, and `\`\`\`js {5-7}` highlights a line range.
 
-**The whole directory is copied into `dist/`, referenced or not**, so a file nothing points at is still downloaded by whoever opens the deck beside it. Three were: they were 525KB of the 1.9MB the folder held. `grep -rl <name> src/talks` before assuming a file is in use, and delete it when it isn't.
+**The whole directory is copied into `dist/`, referenced or not**, so a file nothing points at still ships. Three were: they were 525KB of the 1.9MB the folder held. `grep -rl <name> src/talks` before assuming a file is in use, and delete it when it isn't.
+
+The folder is 14MB now — the talks migration brought 69 files and 11.6MB of it, `mac-catalyst.png` (1.8MB), `react-devtools.gif` (1.8MB) and `catalyst-support.png` (1.2MB) being a third of that on their own. Every one of them is referenced by a deck; the note above is about files nothing points at, which is a different problem from files that are simply large.
 
 Sizes are otherwise close to what they need to be — most of these images render at more than half their pixel width, so there is nothing to reclaim by resizing. The exception was a 2762px-wide screenshot shown at 742px. **Re-encoding a PNG through a canvas usually makes it bigger**, not smaller: two of the three tried that way grew, because downscaling anti-aliases a palette image into a full-colour one. Shrinking the rest needs a real optimiser (`pngquant`, `sharp`), which is a dependency this repository does not have.
 
