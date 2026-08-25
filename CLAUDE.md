@@ -138,13 +138,23 @@ A deck's built `index.html` is a shell — vite emits the slides as JavaScript, 
 Twenty-two of the thirty decks here were presented between 2019 and 2022 out of `Naturalclar/talks`, a lerna monorepo of mdx-deck decks deployed one Vercel project each. They were converted in one pass; the rules are worth knowing, because they are what a reader is looking at:
 
 - **Speaker notes are kept, as `{/* … */}`.** `<Notes>` was mdx-deck's presenter view and ReMDX has nothing like it, but the script the talk was given from is worth more in the repository than deleted. They render as nothing. A note is a JSX expression, so `{`, `}` and `*/` inside one are replaced with lookalikes rather than left to end the comment early.
-- **Each CodeSurfer step became its own slide.** CodeSurfer stepped through several versions of the same code without leaving the slide, focusing whatever changed. The steps are all here, in order, with the focus range handed to shiki instead (` ```ts {2-20} `), and the step's `subtitle` as an `####` heading above it. What is lost is the code holding still while the diff moves under it — [#151](https://github.com/Naturalclar/tech-talk/issues/151) is about building that back.
+- **Each CodeSurfer step became its own slide**, except in the decks since rewritten around `<CodeSteps>` — see below. The steps are all here, in order, with the focus range handed to shiki instead (` ```ts {2-20} `), and the step's `subtitle` as an `####` heading above it.
 - **`<Appear>` is unwrapped.** mdx-deck revealed its children one at a time; they all show at once now.
 - **`require('file-loader!./x.png')` became `../assets/x.png`.** Same-named images across the packages were byte-identical, so they share one copy, and `logo-js.png`/`logo-ts.png` were dropped in favour of the identical `logo-javascript.png`/`logo-typescript.png`.
 
 **`publishedAt` for these is close but not authoritative.** Each deck carried a `<Meta publishedAt>` written when it was scaffolded, a day or so before the talk, as a UTC timestamp — read in Asia/Tokyo it moves eight of them onto the following day, which is what is recorded. Two were cross-checked against the commit that added the deck and taken from that instead: `react-native-rearchitecture`, whose `<Meta>` was copy-pasted from `future-of-react-native` and still carried its date, and `release-automation`. The connpass event pages would settle all of them exactly and are linked from the first slide of most decks.
 
 `storybook-with-react-native` was **not** brought over: it is the same talk as `storybook-web-and-circleci`, which has been here since the start — RNStartup #2, 2019-02-21, the same slides down to the section order. The version in `talks` is a different revision (it has a section on `klank`, and lacks the `artifact-report.png` screenshot), not a different talk.
+
+### `<CodeSteps>` is what CodeSurfer did
+
+`src/components/CodeSteps.tsx` steps through versions of the same code without leaving the slide, so the code holds still and only the highlight moves. A deck wraps its steps in it and writes each one the way it would write a single code slide; **a step ends at each code block**, so the heading or the prose above one belongs to it, and the fenced blocks are untouched — shiki still highlights them from the same ` ```lang {a-b} `. `react-redux-new-api` is the deck rewritten around it so far (35 slides became 18); the rest still have a slide per step, and converting one is a matter of collapsing those slides back into one `<CodeSteps>`.
+
+Three things about it are less obvious than they look, and all three were bugs first:
+
+- **ReMDX's own `stepIndex` is of no use.** The reducer has `STEP_FORWARD`, but `Slide` turns any pending step past the first into a slide change, so a slide can never hold more than one step. The stepper therefore takes the key itself, from a **capture-phase** `keydown` on `document` — ReMDX binds `left`/`right` through Mousetrap on the same element in the bubble phase, so capture runs first and `stopPropagation` keeps the deck from advancing underneath it. When there is no step left in that direction the key is left alone and ReMDX changes the slide as usual.
+- **Being on screen is not the same as being the live slide.** ReMDX animates the slide it is leaving out of view and leaves it displayed for the better part of a second, so `offsetParent` says two slides are visible for that whole window and the one being left goes on claiming keys — a press vanishing every time the presenter walks out of a stepper. What decides it is the `slideIndex` ReMDX puts in the query string, compared against the stepper's own position among the slide wrappers.
+- **A stepper does not survive being left.** ReMDX unmounts a slide once it has animated out, so component state is gone by the time the presenter comes back and there is nothing to restore a step from. Which end to open on is instead taken from a module-level record of the direction the last arrow key moved the deck: entered from the right, a stepper opens on its last step.
 
 ### Deck authoring conventions
 
@@ -161,7 +171,7 @@ Because ReMDX draws every slide into the DOM at once, opening a deck and looking
 
 `meta.json` is what produces all OG/Twitter/oEmbed metadata — a deck without it fails the build.
 
-Shared React components live in `src/components` and are imported as `from '../../components'`: `Layout`, `Page`, `Avatar`, and — added with the talks migration — `Profile`, `Logo`, `Title`, `Header`, `Center`, `AlignLeft`, `Link`.
+Shared React components live in `src/components` and are imported as `from '../../components'`: `Layout`, `Page`, `Avatar`, `CodeSteps`, and — added with the talks migration — `Profile`, `Logo`, `Title`, `Header`, `Center`, `AlignLeft`, `Link`.
 
 `Profile` is one component shared by decks given years apart, so they all name the same employer; it was edited in place in the repository they came from, and that is carried over rather than guessed at per deck. Its rules were `white` there, where the decks ran on code-surfer's dark theme — here they follow `currentColor`, because these render on the shared light one.
 
