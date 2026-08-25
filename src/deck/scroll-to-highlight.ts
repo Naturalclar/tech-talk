@@ -12,7 +12,7 @@
 // The alternative was cutting each sample down to the lines its slide is
 // about, which changes what was presented. This does not touch the decks.
 
-const centreOnHighlight = (pre: HTMLPreElement): void => {
+export const centreOnHighlight = (pre: HTMLPreElement): void => {
   if (pre.scrollHeight <= pre.clientHeight) return
 
   const lines = pre.querySelectorAll<HTMLElement>('code .line.highlighted')

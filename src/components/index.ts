@@ -1,6 +1,7 @@
 export { default as AlignLeft } from './AlignLeft'
 export { default as Avatar } from './Avatar'
 export { default as Center } from './Center'
+export { default as CodeSteps } from './CodeSteps'
 export { default as Header } from './Header'
 export { default as Layout } from './Layout'
 export { default as Link } from './Link'

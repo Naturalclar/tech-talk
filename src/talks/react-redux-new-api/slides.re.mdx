@@ -1,4 +1,4 @@
-import { Avatar, Profile } from '../../components';
+import { Avatar, CodeSteps, Profile } from '../../components';
 export { Themes } from '../../deck/Themes.tsx';
 
 ## connect の要らない react-redux
@@ -25,6 +25,8 @@ export { Themes } from '../../deck/Themes.tsx';
 {/* 今回は react-redux について発表します。 react-redux はその名の通り、redux を react で使えるようにするためのラッパーで、 connect とか提供しているやつです。 */}
 
 ---
+
+<CodeSteps>
 
 #### 今までの react-redux
 
@@ -55,8 +57,6 @@ export default connect(
 
 {/* まずは今までの react-redux を使った書き方について、軽くおさらいします。これはあくまで実装の一例です。 */}
 
----
-
 #### mapStateToProps
 
 ```jsx {9-11}
@@ -85,8 +85,6 @@ export default connect(
 ```
 
 {/* mapStateToProps で store から取ってきたい値を取得して */}
-
----
 
 #### mapDispatchToProps
 
@@ -117,8 +115,6 @@ export default connect(
 
 {/* mapDispatchToProps で component 内で起動したい action を取ってきて */}
 
----
-
 #### connect
 
 ```jsx {19-22}
@@ -147,6 +143,8 @@ export default connect(
 ```
 
 {/* connect で component にわたす。みたいな感じですね。 */}
+
+</CodeSteps>
 
 ---
 
@@ -210,6 +208,8 @@ export default Foo;
 
 ---
 
+<CodeSteps>
+
 #### useDispatch
 
 ```jsx
@@ -230,8 +230,6 @@ export const CounterComponent = ({ value }) => {
 };
 ```
 
----
-
 #### dispatchを定義して、それを使う
 
 ```jsx
@@ -251,8 +249,6 @@ export const CounterComponent = ({ value }) => {
   );
 };
 ```
-
----
 
 #### dispatch する callback を 子 component にわたす場合
 
@@ -280,6 +276,8 @@ export const MyIncrementButton = React.memo(({ onIncrement }) => (
 ));
 ```
 
+</CodeSteps>
+
 ---
 
 ## useDispatch
@@ -295,6 +293,8 @@ export const MyIncrementButton = React.memo(({ onIncrement }) => (
 {/* 今までの書き方から新APIに変更していく手順を軽く紹介していきます。 */}
 
 ---
+
+<CodeSteps>
 
 ```jsx {1-24}
 import React from "react";
@@ -322,8 +322,6 @@ export default connect(
 ```
 
 {/* これが最初に見せた、従来の connect を使った書き方です */}
-
----
 
 #### mapStateToProps を useSelector に変える
 
@@ -355,8 +353,6 @@ export default connect(
 ```
 
 {/* まずは、 useSelector を使って、mapStateToPropsで取っていた Props を store から取得します */}
-
----
 
 #### mapDispatchToProps を useDispatch に変更
 
@@ -391,8 +387,6 @@ export default connect(
 
 {/* そして、 useDispatch を使って、dispatch を取得、指定の Action を dispatch する変数を定義していきます。 */}
 
----
-
 #### これで・・・
 
 ```jsx {1-27}
@@ -426,8 +420,6 @@ export default connect(
 
 {/* これで, connect を削除する準備ができました。 */}
 
----
-
 #### さらば connect !
 
 ```jsx
@@ -447,8 +439,6 @@ export default Foo;
 ```
 
 {/* 削除していきましょう。 */}
-
----
 
 #### 必要な箇所を取ってくるSelectorに変更したり
 
@@ -471,8 +461,6 @@ export default Foo;
 
 {/* 他に簡略化する手段として、selector を関数として切り出して別の箇所から取ってきたり */}
 
----
-
 #### 複数の値を持ってくるSelectorにしたり
 
 ```jsx
@@ -494,8 +482,6 @@ export default Foo;
 
 {/* state から複数の値を Object として返す Selector にしていったりできます。 先程言ったとおり、複数の値を取ってくる場合は shallowEqual を使いましょう。 reselect を使っている場合は、 selector の方に定義しているので必要無いです。 */}
 
----
-
 #### 必要な箇所を custom hooks にしたり
 
 ```jsx
@@ -510,6 +496,8 @@ const Foo = () => {
 export default Foo;
 ```
 
+</CodeSteps>
+
 {/* 特定のComponent用に selector と dispatch を組み合わせたcustomHooks を作るのも良いかもしれません。 */}
 
 ---
@@ -517,6 +505,8 @@ export default Foo;
 ## Presentational と Container に分けている時
 
 ---
+
+<CodeSteps>
 
 #### Presentational と Container に分けている時
 
@@ -537,8 +527,6 @@ export default connect(
 )(Component);
 ```
 
----
-
 ```js
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -556,11 +544,15 @@ const ConnectedComponent = () => {
 export default ConnectedComponent;
 ```
 
+</CodeSteps>
+
 ---
 
 ## TypeScript での使用例
 
 ---
+
+<CodeSteps>
 
 #### TypeScript での使用例
 
@@ -596,8 +588,6 @@ export default connect(
 )(Hoge);
 ```
 
----
-
 #### こういう Connect の Component を使う時
 
 ```jsx {20-29}
@@ -632,8 +622,6 @@ export default connect(
 )(Hoge);
 ```
 
----
-
 #### dispatchの結果が渡されていないと怒られる
 
 ```js
@@ -642,8 +630,6 @@ import Hoge from "./Hoge";
 
 const Fuga = () => <Hoge />; // onFoo, onBar is Required but not provided
 ```
-
----
 
 #### 新しいAPIを使用していると
 
@@ -677,8 +663,6 @@ const ConnectedHoge = () => {
 export default ConnectedHoge;
 ```
 
----
-
 #### 絶対に渡されているので怒られない！
 
 ```js {24}
@@ -710,6 +694,8 @@ const ConnectedHoge = () => {
 
 export default ConnectedHoge;
 ```
+
+</CodeSteps>
 
 ---
 
