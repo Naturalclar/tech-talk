@@ -43,3 +43,29 @@
   max-width: 100%;
   overflow: auto;
 }
+
+/* CodeSurfer pointed at a line range by taking the rest of the file back —
+   dimming it — rather than by colouring the range. ReMDX's stylesheet does
+   the opposite, setting the highlighted lines bold on a pale blue band and
+   leaving everything else at full strength, which on a 50-line sample is a
+   band the audience has to go looking for.
+
+   The `:has()` is what keeps this off the code blocks that name no range at
+   all. shiki marks the lines it was told to highlight and nothing else, so
+   there is no "this block has a focus" flag to test — without the guard,
+   `.line:not(.highlighted)` is every line of every plain code block, and
+   they would all render dimmed. A browser too old for `:has()` simply gets
+   the undimmed behaviour back.
+
+   Dimming only, no blur. These render at 0.5em, so proportionally even
+   `blur(1px)` costs the surrounding lines their legibility and `blur(2px)`
+   turns them to mush — and the point of leaving them on the slide at all is
+   that they are the context the focused lines sit in. 0.35 is dark enough to
+   read and light enough that the eye goes to the range first.
+
+   The bold and the band are left alone: they cost nothing next to this and
+   give the range an edge, which carries further across a room than a
+   difference in weight does. */
+#root pre:has(code .line.highlighted) .line:not(.highlighted) {
+  opacity: 0.35;
+}

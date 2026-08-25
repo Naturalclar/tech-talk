@@ -146,6 +146,12 @@ Twenty-two of the thirty decks here were presented between 2019 and 2022 out of 
 
 `storybook-with-react-native` was **not** brought over: it is the same talk as `storybook-web-and-circleci`, which has been here since the start — RNStartup #2, 2019-02-21, the same slides down to the section order. The version in `talks` is a different revision (it has a section on `klank`, and lacks the `artifact-report.png` screenshot), not a different talk.
 
+### A named line range dims the rest of the block
+
+ReMDX's stylesheet points at a highlighted range by setting it bold on a pale blue band and leaving the rest of the file at full strength; CodeSurfer did the opposite, taking the rest back so the eye lands on the range. `deck.css` adds the dimming — `opacity: 0.35`, no blur, since these render at `0.5em` and even `blur(1px)` costs the surrounding lines the legibility that is the reason they are still on the slide.
+
+**The `:has()` in that rule is load-bearing.** shiki marks the lines it was told to highlight and nothing else, so there is no flag saying "this block names a range" — without the guard, `.line:not(.highlighted)` is every line of every plain code block and they all render dimmed. A browser too old for `:has()` gets the undimmed behaviour, which is what the decks looked like before.
+
 ### `<CodeSteps>` is what CodeSurfer did
 
 `src/components/CodeSteps.tsx` steps through versions of the same code without leaving the slide, so the code holds still and only the highlight moves. A deck wraps its steps in it and writes each one the way it would write a single code slide; **a step ends at each code block**, so the heading or the prose above one belongs to it, and the fenced blocks are untouched — shiki still highlights them from the same ` ```lang {a-b} `. `react-redux-new-api` is the deck rewritten around it so far (35 slides became 18); the rest still have a slide per step, and converting one is a matter of collapsing those slides back into one `<CodeSteps>`.
