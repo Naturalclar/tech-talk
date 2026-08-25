@@ -1,0 +1,716 @@
+import { Avatar, Profile } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
+## connect の要らない react-redux
+
+[React.js Meetup #8](https://reactjs-meetup.connpass.com/event/138738/)
+@natural_clar
+
+{/* connect の要らない react-redux というタイトルで発表させていただきます NaturalClar です。よろしくおねがいします。この発表スライドは先程 Twitter に HashTag をつけてつぶやいたので、そちらからも確認できます。 */}
+
+---
+
+## About Me
+
+<Avatar />
+
+<Profile />
+
+{/* まずは自己紹介です。Jesseです。アメリカ人です。 去年の9月に日本に引っ越してきました。 CureAppという会社で主にReact Native と TypeScript を扱った医療系のアプリを開発しています。 */}
+
+---
+
+# react-redux
+
+{/* 今回は react-redux について発表します。 react-redux はその名の通り、redux を react で使えるようにするためのラッパーで、 connect とか提供しているやつです。 */}
+
+---
+
+#### 今までの react-redux
+
+```jsx {1-24}
+import React from "react";
+import { connect } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* まずは今までの react-redux を使った書き方について、軽くおさらいします。これはあくまで実装の一例です。 */}
+
+---
+
+#### mapStateToProps
+
+```jsx {9-11}
+import React from "react";
+import { connect } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* mapStateToProps で store から取ってきたい値を取得して */}
+
+---
+
+#### mapDispatchToProps
+
+```jsx {13-17}
+import React from "react";
+import { connect } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* mapDispatchToProps で component 内で起動したい action を取ってきて */}
+
+---
+
+#### connect
+
+```jsx {19-22}
+import React from "react";
+import { connect } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* connect で component にわたす。みたいな感じですね。 */}
+
+---
+
+## react-redux v7.1
+
+- [Release Note](https://github.com/reduxjs/react-redux/releases)
+- [Hooks を用いた新 API](https://react-redux.js.org/next/api/hooks)
+  - useSelector
+  - useDispatch
+- いままでの書き方も引き続き使える
+
+{/* 二週間ほど前 (2019/07/11) に react-redux v7.1がリリースされました。 v7 で行われたパフォーマンス改善に加え、 Hooks を用いた新しい API、 useSelector と useDispatch が追加されました。 今回はその使い方について軽く説明していきます。 後方互換性があるので、今までの書き方も引き続き使用できます。 */}
+
+---
+
+# useSelector
+
+`useSelector(selector: Function, equalityFn?: Function);`
+
+{/* まずは useSelector について説明します。その名の通り、特定のSelectorを使って、値を取ってくる Hooks です。 */}
+
+---
+
+#### useSelector
+
+```jsx {5}
+import React from "react";
+import { useSelector } from "react-redux";
+
+const Foo = ({ title }) => {
+  const title = useSelector(state => state.title);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+export default Foo;
+```
+
+{/* 使い方としてはこんな感じです。 store の state を引数として、必要な値を取り出します。 selector の返り値がそのまま値として使えます。 今まで mapStateToProps として定義していた関数を useSelector に入れるイメージですね。 mapStateToProps と違って、Object を返す必要は無いので、単一の値が必要な場合はこの例にあるように、それをそのまま定義できます。 */}
+
+---
+
+## useSelector
+
+- `mapStateToProps` の代わり
+- selector の結果が変更されたら rerender される
+- 複数の値を Object として取ってくる場合：
+
+  - 第二引数に `shallowequal` を入れる
+  - `reselect` を使う
+
+{/* useSelector は今までのmapStateToPropsの代わりに使えます。 ただ、一つ注意点があります。 useSelectorはselectorの戻り値の結果が変更される度に rerender されます。 今までのmapStateToPropsのように、Objectを返り値として使用していた場合は、毎回新しいObjectが作成されるため、deepEqualにはなりません。 複数の値を取得する場合の解決策としては3種類あります。 1つ目：useSelectorの第二引数に react-redux が提供している shallowequal を使って、shallowequal の時は Rerender しないようにする。 2つ目: reselect を使って、selector の結果をメモ化することでも rerender を防ぐことができます。 3つ目：必要な値ごとに、useSelector を使って、全て単一の結果を返す。 */}
+
+---
+
+# useDispatch
+
+`const dispatch = useDispatch();`
+
+{/* つづいて useDispatch について説明します。useDispatch は dispatch です。 action を実行するための dispatch を返します。 */}
+
+---
+
+#### useDispatch
+
+```jsx
+import React from "react";
+import { useDispatch } from "react-redux";
+
+export const CounterComponent = ({ value }) => {
+  const dispatch = useDispatch();
+
+  return (
+    <div>
+      <span>{value}</span>
+      <button onClick={() => dispatch({ type: "increment-counter" })}>
+        Increment counter
+      </button>
+    </div>
+  );
+};
+```
+
+---
+
+#### dispatchを定義して、それを使う
+
+```jsx
+import React from "react";
+import { useDispatch } from "react-redux";
+
+export const CounterComponent = ({ value }) => {
+  const dispatch = useDispatch();
+
+  return (
+    <div>
+      <span>{value}</span>
+      <button onClick={() => dispatch({ type: "increment-counter" })}>
+        Increment counter
+      </button>
+    </div>
+  );
+};
+```
+
+---
+
+#### dispatch する callback を 子 component にわたす場合
+
+```jsx
+import React, { useCallback } from "react";
+import { useDispatch } from "react-redux";
+
+export const CounterComponent = ({ value }) => {
+  const dispatch = useDispatch();
+  const incrementCounter = useCallback(
+    () => dispatch({ type: "increment-counter" }),
+    [dispatch]
+  );
+
+  return (
+    <div>
+      <span>{value}</span>
+      <MyIncrementButton onIncrement={incrementCounter} />
+    </div>
+  );
+};
+
+export const MyIncrementButton = React.memo(({ onIncrement }) => (
+  <button onClick={onIncrement}>Increment counter</button>
+));
+```
+
+---
+
+## useDispatch
+
+- `dispatch` が返ってくる
+- `mapDispatchToProps` のかわりになる
+- 子 Component にわたす場合は `useCallback` と組み合わせる
+
+---
+
+# 実装例
+
+{/* 今までの書き方から新APIに変更していく手順を軽く紹介していきます。 */}
+
+---
+
+```jsx {1-24}
+import React from "react";
+import { connect } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* これが最初に見せた、従来の connect を使った書き方です */}
+
+---
+
+#### mapStateToProps を useSelector に変える
+
+```jsx
+import React from "react";
+import { connect, useSelector } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  const title = useSelector(state => state.title);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* まずは、 useSelector を使って、mapStateToPropsで取っていた Props を store から取得します */}
+
+---
+
+#### mapDispatchToProps を useDispatch に変更
+
+```jsx
+import React from "react";
+import { connect, useSelector, useDispatch } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  const title = useSelector(state => state.title);
+  const dispatch = useDispatch();
+  const onPressBar = dispatch(someAction);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* そして、 useDispatch を使って、dispatch を取得、指定の Action を dispatch する変数を定義していきます。 */}
+
+---
+
+#### これで・・・
+
+```jsx {1-27}
+import React from "react";
+import { connect, useSelector, useDispatch } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = ({ title, onPressBar }) => {
+  const title = useSelector(state => state.title);
+  const dispatch = useDispatch();
+  const onPressBar = dispatch(someAction);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+const mapStateToProps = state => ({
+  title: state.title
+});
+
+const mapDispatchToProps = dispatch => ({
+  onPressBar: () => {
+    dispatch(someAction);
+  }
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Foo);
+```
+
+{/* これで, connect を削除する準備ができました。 */}
+
+---
+
+#### さらば connect !
+
+```jsx
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { someAction } from "../actions";
+
+const Foo = () => {
+  const title = useSelector(state => state.title);
+  const dispatch = useDispatch();
+  const onPressBar = dispatch(someAction);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+export default Foo;
+```
+
+{/* 削除していきましょう。 */}
+
+---
+
+#### 必要な箇所を取ってくるSelectorに変更したり
+
+```jsx
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { someAction } from "../actions";
+import { getTitle } from "../selectors";
+
+const Foo = () => {
+  const title = useSelector(getTitle);
+  const dispatch = useDispatch();
+  const onPressBar = dispatch(someAction);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+export default Foo;
+```
+
+{/* 他に簡略化する手段として、selector を関数として切り出して別の箇所から取ってきたり */}
+
+---
+
+#### 複数の値を持ってくるSelectorにしたり
+
+```jsx
+import React from "react";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
+import { someAction } from "../actions";
+import { getTitle } from "../selectors";
+
+const Foo = () => {
+  const { title, bar } = useSelector(getTitle, shallowEqual);
+  const dispatch = useDispatch();
+  const onPressBar = dispatch(someAction);
+
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+export default Foo;
+```
+
+{/* state から複数の値を Object として返す Selector にしていったりできます。 先程言ったとおり、複数の値を取ってくる場合は shallowEqual を使いましょう。 reselect を使っている場合は、 selector の方に定義しているので必要無いです。 */}
+
+---
+
+#### 必要な箇所を custom hooks にしたり
+
+```jsx
+import React from "react";
+import { useBar } from "../hooks";
+
+const Foo = () => {
+  const { title, onPressBar } = useBar();
+  return <button onClick={onPressBar}>{title}</button>;
+};
+
+export default Foo;
+```
+
+{/* 特定のComponent用に selector と dispatch を組み合わせたcustomHooks を作るのも良いかもしれません。 */}
+
+---
+
+## Presentational と Container に分けている時
+
+---
+
+#### Presentational と Container に分けている時
+
+```jsx
+import React from "react";
+import { connect } from "react-redux";
+import Component from "./Component";
+
+const mapStateToProps = state => ({ foo: state.foo, bar: state.bar });
+const mapDispatchToProps = dispatch => ({
+  onFoo: () => dispatch(fooAction),
+  onBar: () => dispatch(barAction)
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Component);
+```
+
+---
+
+```js
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import Component from "./Component";
+
+const ConnectedComponent = () => {
+  const { foo, bar } = useSelector(getFooBar);
+  const dispatch = useDispatch();
+  const onFoo = () => dispatch(fooAction);
+  const onBar = () => dispatch(barAction);
+
+  return <Component foo={foo} bar={bar} onFoo={onFoo} onBar={onBar}>
+};
+
+export default ConnectedComponent;
+```
+
+---
+
+## TypeScript での使用例
+
+---
+
+#### TypeScript での使用例
+
+```jsx
+import React from "react";
+import { connect } from "react-redux";
+import { Dispatch } from "redux"; // from @types
+import { State, Actions } from "../types";
+
+type Props = {
+  foo: string
+  bar: string
+  onFoo: ()=>void
+  onBar: ()=>void
+}
+
+const Hoge = ({ foo, bar, onFoo, onBar }: Props) => (
+  <div>
+    <button onClick={onFoo}>{foo}</button>
+    <button onClick={onBar}>{bar}</button>
+  </div>
+);
+
+const mapStateToProps = (state: State) => ({ foo: state.foo, bar: state.bar });
+const mapDispatchToProps = (dispatch: Dispatch<Actions>) => ({
+  onFoo: () => dispatch(fooAction),
+  onBar: () => dispatch(barAction)
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Hoge);
+```
+
+---
+
+#### こういう Connect の Component を使う時
+
+```jsx {20-29}
+import React from "react";
+import { connect } from "react-redux";
+import { Dispatch } from "redux"; // from @types
+import { State, Actions } from "../types";
+
+type Props = {
+  foo: string
+  bar: string
+  onFoo: ()=>void
+  onBar: ()=>void
+}
+
+const Hoge = ({ foo, bar, onFoo, onBar }: Props) => (
+  <div>
+    <button onClick={onFoo}>{foo}</button>
+    <button onClick={onBar}>{bar}</button>
+  </div>
+);
+
+const mapStateToProps = (state: State) => ({ foo: state.foo, bar: state.bar });
+const mapDispatchToProps = (dispatch: Dispatch<Actions>) => ({
+  onFoo: () => dispatch(fooAction),
+  onBar: () => dispatch(barAction)
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Hoge);
+```
+
+---
+
+#### dispatchの結果が渡されていないと怒られる
+
+```js
+import React from "react";
+import Hoge from "./Hoge";
+
+const Fuga = () => <Hoge />; // onFoo, onBar is Required but not provided
+```
+
+---
+
+#### 新しいAPIを使用していると
+
+```js
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+
+type Props = {
+  foo: string
+  bar: string
+  onFoo: ()=>void
+  onBar: ()=>void
+}
+
+const Hoge = ({ foo, bar, onFoo, onBar }: Props) => (
+  <div>
+    <button onClick={onFoo}>{foo}</button>
+    <button onClick={onBar}>{bar}</button>
+  </div>
+);
+
+const ConnectedHoge = () => {
+  const { foo, bar } from useSelector(getFooBar);
+  const dispatch = useDispatch();
+  onFoo: () => dispatch(fooAction);
+  onBar: () => dispatch(barAction);
+
+  return <Hoge foo={foo} bar={bar} onFoo={onFoo} onBar={onBar} />
+}
+
+export default ConnectedHoge;
+```
+
+---
+
+#### 絶対に渡されているので怒られない！
+
+```js {24}
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+
+type Props = {
+  foo: string
+  bar: string
+  onFoo: ()=>void
+  onBar: ()=>void
+}
+
+const Hoge = ({ foo, bar, onFoo, onBar }: Props) => (
+  <div>
+    <button onClick={onFoo}>{foo}</button>
+    <button onClick={onBar}>{bar}</button>
+  </div>
+);
+
+const ConnectedHoge = () => {
+  const { foo, bar } from useSelector(getFooBar);
+  const dispatch = useDispatch();
+  onFoo: () => dispatch(fooAction);
+  onBar: () => dispatch(barAction);
+
+  return <Hoge foo={foo} bar={bar} onFoo={onFoo} onBar={onBar} /> // No TS Error!
+}
+
+export default ConnectedHoge;
+```
+
+---
+
+## ありがとうございました

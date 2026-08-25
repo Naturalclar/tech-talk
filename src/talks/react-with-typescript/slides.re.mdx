@@ -1,0 +1,111 @@
+import { Avatar, Profile } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
+## React and Redux with TypeScript
+
+[#reactjs_lt](https://informetis.connpass.com/event/142183/)
+@naturalclar
+
+---
+
+## About Me
+
+<Avatar />
+<Profile />
+
+{/* まずは自己紹介です。Jesseと申します。アメリカ人です。 去年の9月に日本に引っ越してきました。 CureAppという会社で主にReact Native と TypeScript を扱った医療系のアプリを開発しています。 */}
+
+---
+
+# react
+
+---
+
+## Class component
+
+---
+
+#### Intro.tsx
+
+```tsx
+import React from "react";
+
+type Props = {
+  name: string;
+  age: number;
+};
+
+type State = {
+  hobby: string;
+};
+
+class Intro extends React.Component<Props, State> {}
+```
+
+---
+
+## Function Component
+
+---
+
+#### Intro.tsx
+
+```tsx
+import React from "react";
+
+type Props = {
+  name: string;
+  age: number;
+};
+
+const Intro: React.FC<Props> = ({ name, age }: Props) => {
+  return (
+    <p>
+      Hello! My name is {name}, I'm {age} years old.
+    </p>
+  );
+};
+```
+
+---
+
+## useState
+
+---
+
+#### Intro.tsx
+
+```tsx
+import React from "react";
+
+type Props = {
+  name: string;
+  age: number;
+};
+
+type;
+
+const Intro: React.FC<Props> = ({ name, age }: Props) => {
+  return (
+    <p>
+      Hello! My name is {name}, I'm {age} years old.
+    </p>
+  );
+};
+```
+
+---
+
+## useMemo
+
+---
+
+## useContext
+
+---
+
+# redux
+
+---
+
+ありがとうございました。

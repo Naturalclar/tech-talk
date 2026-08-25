@@ -1,0 +1,944 @@
+import { AlignLeft, Header, Profile } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
+## JSI in a nutshell
+
+<img
+  src="../assets/react-native-rearchitecture.png"
+  style={{ position: "absolute", top: 20, left: 20, opacity: 0.2 }}
+  width="900"
+/>
+
+<footer style={{position:'absolute', bottom: 20, right: 20}}>
+
+[TECH STAND #5](https://standfm.connpass.com/event/218812/)
+@naturalclar
+
+</footer>
+
+{/* JSI in a Nutshell というタイトルで登壇させていただきます。Naturalclarです。 */}
+
+---
+
+<AlignLeft>
+
+<Header>About Me</Header>
+
+<Profile />
+
+<img src="../assets/contribute.png" width="900" />
+
+{/* Introduction */}
+
+</AlignLeft>
+
+---
+
+<AlignLeft>
+
+<Header>概要</Header>
+
+- JSI とは
+- JSI の利点
+- JSI の使い方
+- JSI を使ったライブラリ紹介
+
+</AlignLeft>
+
+---
+
+## JSI とは? 🤔
+
+---
+
+<AlignLeft>
+
+<Header>JSI</Header>
+
+- **hermes**, **jsc** などの **JavaScript Engine** のラッパー
+- **React Native New Architecture** の一環
+- **C++** への参照を持ち、**JS** から**同期的**に呼び出せる
+
+</AlignLeft>
+
+{/* JSI とは JavaScript Interface Facebook が開発している JavaScript Engine 用のラッパーです。 */}
+
+---
+
+## React Native New Architecture
+
+---
+
+<Header>Old Architecture</Header>
+
+<img
+  src="../assets/react-native-architecture-yoga.png"
+  width="900"
+/>
+
+{/* 現状の Native Module と UI Renderer、そして New Architecture 後の状態について話す New Architecture の中核となるのがこの JSI */}
+
+---
+
+<Header>Old Architecture - Bridge</Header>
+
+- JS と Native の通信は **JSON** を通して**非同期**で行われる
+- UI の描画には **JS** → **Native** → **Yoga** → **Native UI** とステップを踏む必要がある
+- Android の場合、Bridge の処理はすべてアプリ起動時に予め読み込む必要があるので**起動速度が遅い**
+- JavaScript と Native は疎結合であり、互いに無関心(悪いことではない)
+
+---
+
+<Header>New Architecture</Header>
+
+<img
+  src="../assets/react-native-rearchitecture.png"
+  width="900"
+/>
+
+---
+
+<Header>New Architecture - JSI で変わる世界 </Header>
+
+- **TurboModules** - **JSI** を通して Native Module の**同期的**呼び出しが可能に
+- **Fabric** - **JSI** を通して **Yoga** を直接呼べるため、**UI の描画**がより効率的に
+- **CodeGen** を使って **Flow/TypeScript** と C++ を繋ぐ型情報を自動生成
+- JavaScript と Native 部分が **JSI** を通して互いを感知できる
+- JavaScript で行うには重い**暗号化**等の処理を **C++** 側で実行して結果を返せる
+
+---
+
+<Header>New Architecture - Turbo Modules</Header>
+
+- **JSI** を通して OS 固有の機能 (Camera, Bluetooth 等) を呼び出す仕組み
+- **C++** と **Objective-C (iOS)**、及び **Java (Android)** の抽象レイヤー
+- Objective-C は **Objective-C++** を通して C++ の実行が可能
+- Java は **JNI** を通して C++ の実行が可能
+- **Swift** , **Kotlin** でも JSI の呼び出しは可能 (使用例:[react-native-vision-camera](https://github.com/mrousavy/react-native-vision-camera))
+
+{/* 基本読み飛ばす */}
+
+---
+
+<Header>New Architecture - Fabric</Header>
+
+- **JSI** を用いたより効率的な**UI 描画**の手法
+- React Native で Flexbox を実装している **Yoga** が c++ 製のため、**JSI** から直接呼べる
+- **FlatList**等の Virtualized List の描画が途切れなくなる
+- Facebook 内部では **1000 画面以上**の React Native 製の画面が Fabric に移行済み
+
+<img src="../assets/fabric-in-facebook.png" width="700" />
+
+<p style={{ fontSize: 18 }}>
+  <a href="https://twitter.com/joshuaisgross/status/1415099495285608453">
+    https://twitter.com/joshuaisgross/status/1415099495285608453
+  </a>
+</p>
+
+{/* 基本読み飛ばす */}
+
+---
+
+<Header>JSI 単体でのユースケース</Header>
+
+- UI や OS 固有の処理を挟まない C++ で完結する処理
+- 暗号化、復号化等、**JS 単体では重い処理**
+  - (NodeJS であれば早い、が **React Native は NodeJS ではない**)
+- **画像**、**音声**、**動画**のアップロード、加工処理
+- その他、UI や JS を妨害せずに行えるすべての処理
+
+{/* 今回はJSIを使って、JavaScriptからC++の関数呼び出しを行うモジュールの作り方を解説します */}
+
+---
+
+## 実装サンプル
+
+---
+
+## C++ 側
+
+---
+
+#### ヘッダーファイルの作成
+
+```c
+// MyAwesomeModule.h
+#include <jsi/jsilib.h>
+#include <jsi/jsi.h>
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime);
+    void cleanup();
+  }
+}
+```
+
+---
+
+#### jsi関連のファイルをinclude
+
+```c {2-3}
+// MyAwesomeModule.h
+#include <jsi/jsilib.h>
+#include <jsi/jsi.h>
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime);
+    void cleanup();
+  }
+}
+```
+
+---
+
+#### facebook::jsiをjsiとして呼び出せるようにする
+
+```c {5}
+// MyAwesomeModule.h
+#include <jsi/jsilib.h>
+#include <jsi/jsi.h>
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime);
+    void cleanup();
+  }
+}
+```
+
+---
+
+#### module を呼び出す namespace をつける（必須ではない)
+
+```c {7-8}
+// MyAwesomeModule.h
+#include <jsi/jsilib.h>
+#include <jsi/jsi.h>
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime);
+    void cleanup();
+  }
+}
+```
+
+---
+
+#### install と cleanup を定義する
+
+```c {9-10}
+// MyAwesomeModule.h
+#include <jsi/jsilib.h>
+#include <jsi/jsi.h>
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime);
+    void cleanup();
+  }
+}
+```
+
+---
+
+#### install: JavaScript の global で呼び出せる関数を作成する
+
+```cpp {8-24}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### (.cpp) install: JavaScript の global で呼び出せる関数を作成する
+
+```cpp {8-24}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### jsi::Runtime は JS のランタイムを模したインスタンス
+
+```cpp {8}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### jsが呼び出されたときに実行される関数、HostFunctionを作成
+
+```cpp {9}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### 必要な引数を渡す
+
+```cpp {10-12}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### c++側で実行される関数を定義
+
+```cpp {13-20}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### JavaScript の global に HostFunction を設定する
+
+```cpp {22-23}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+#### cleanup処理が必要な場合は書く
+
+```cpp {26-28}
+// MyAwesomeModule.cpp
+#import "MyAwesomeModule.h"
+
+using namespace facebook;
+
+namespace naturalclar {
+  namespace awesomeModule {
+    void install(jsi::Runtime& runtime) {
+      auto myAwesomeMethod = jsi::Function::createFromHostFunction(
+        runtime, // 引数から渡される jsi の runtime をそのまま渡す
+        jsi::PropNameID::forAscii(runtime, "myAwesomeMethod"), // JavaScript側に紐付けるための名前
+        2, // 関数に渡す引数の数
+        [](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+          // c++ の処理をここで行う
+          // jsi::Value を返すか、Exception を投げることができる
+          double a = args[0].getNumber();
+          double b = args[1].getNumber();
+          return jsi::Value(a * b);
+        }
+      );
+
+      // JavaScript の global に method を追加する
+      runtime.global().setProperty(runtime, "myAwesomeMethod", std::move(myAwesomeMethod));
+    }
+
+    void cleanup() {
+      // 何かしらのcleanup処理が必要な場合は描く
+    }
+
+  }
+}
+```
+
+---
+
+## iOS 側
+
+---
+
+#### iOSは .mm ファイルからそのまま c++ が呼べる
+
+```objectivec
+// RNMyModule.mm
+#import "MyAwesomeModule.h"
+
+@implementation RNAwesomeModule
+@synthesize bridge = _bridge;
+@synthesize methodQueue = _methodQueue;
+
+RCT_EXPORT_MODULE()
+
+// Main Queue が立ち上がってから起動する
++ (BOOL)requiresMainQueueSetup {
+  return YES;
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  _bridge = bridge;
+
+  // JS と c++ の繋ぎ目を作成する。
+  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+  if (!cxxBridge.runtime) {
+    return;
+  }
+
+  naturalclar::awesomeModule::install(*(jsi::Runtime *)cxxBridge.runtime);
+}
+
+- (void)invalidate {
+  naturalclar::awesomeModule::cleanup();
+}
+
+@end
+```
+
+---
+
+#### MainQueueが立ち上がるまで待つ
+
+```objectivec {10-13}
+// RNMyModule.mm
+#import "MyAwesomeModule.h"
+
+@implementation RNAwesomeModule
+@synthesize bridge = _bridge;
+@synthesize methodQueue = _methodQueue;
+
+RCT_EXPORT_MODULE()
+
+// Main Queue が立ち上がってから起動する
++ (BOOL)requiresMainQueueSetup {
+  return YES;
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  _bridge = bridge;
+
+  // JS と c++ の繋ぎ目を作成する。
+  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+  if (!cxxBridge.runtime) {
+    return;
+  }
+
+  naturalclar::awesomeModule::install(*(jsi::Runtime *)cxxBridge.runtime);
+}
+
+- (void)invalidate {
+  naturalclar::awesomeModule::cleanup();
+}
+
+@end
+```
+
+---
+
+#### MainQueueが立ち上がるまで待つ
+
+```objectivec {15-26}
+// RNMyModule.mm
+#import "MyAwesomeModule.h"
+
+@implementation RNAwesomeModule
+@synthesize bridge = _bridge;
+@synthesize methodQueue = _methodQueue;
+
+RCT_EXPORT_MODULE()
+
+// Main Queue が立ち上がってから起動する
++ (BOOL)requiresMainQueueSetup {
+  return YES;
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  _bridge = bridge;
+
+  // JS と c++ の繋ぎ目を作成する。
+  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+  if (!cxxBridge.runtime) {
+    return;
+  }
+
+  naturalclar::awesomeModule::install(*(jsi::Runtime *)cxxBridge.runtime);
+}
+
+- (void)invalidate {
+  naturalclar::awesomeModule::cleanup();
+}
+
+@end
+```
+
+---
+
+#### cleanup処理を書く
+
+```objectivec {28-30}
+// RNMyModule.mm
+#import "MyAwesomeModule.h"
+
+@implementation RNAwesomeModule
+@synthesize bridge = _bridge;
+@synthesize methodQueue = _methodQueue;
+
+RCT_EXPORT_MODULE()
+
+// Main Queue が立ち上がってから起動する
++ (BOOL)requiresMainQueueSetup {
+  return YES;
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  _bridge = bridge;
+
+  // JS と c++ の繋ぎ目を作成する。
+  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+  if (!cxxBridge.runtime) {
+    return;
+  }
+
+  naturalclar::awesomeModule::install(*(jsi::Runtime *)cxxBridge.runtime);
+}
+
+- (void)invalidate {
+  naturalclar::awesomeModule::cleanup();
+}
+
+@end
+```
+
+---
+
+## Android 側 (WIP)
+
+---
+
+```
+// CMakeList.txt
+cmake_minimum_required(VERSION 3.9.0)
+
+add_library(cpp
+            SHARED
+            ../cpp/example.cpp
+            ./cpp-adapter.cpp
+)
+
+include_directories(
+            ../../react-native/React
+            ../../react-native/React/Base
+            ../../react-native/ReactCommon/jsi
+            ../cpp
+)
+
+set_target_properties(
+        cpp PROPERTIES
+        CXX_STANDARD 17
+        CXX_EXTENSIONS OFF
+        POSITION_INDEPENDENT_CODE ON
+)
+
+target_link_libraries(
+        cpp
+        android
+)
+```
+
+---
+
+```
+//build.gradle
+  externalNativeBuild {
+    cmake {
+      path "./CMakeLists.txt"
+      version "3.8.0+"
+    }
+  }
+```
+
+---
+
+<Header>Android</Header>
+
+- コードサンプル後ほど追記します 🙇‍♀️
+- **CMake** を使って cpp ファイルをビルド時に取り込む
+- 基本的には iOS と同じで起動時に JS の global に module を仕込む
+- JSI と Java を繋ぐ JNI adapter 用のファイル、`cpp-adapter.cpp` が必要
+
+---
+
+## JavaScript 側
+
+---
+
+#### JS側はこれだけ、JSIがglobalに関数を生やしたのでそれを使う
+
+```js
+// MyModule.js
+
+export const myAwesomeMethod = global.myAwesomeMethod;
+```
+
+---
+
+## JSI を使っているライブラリ
+
+---
+
+<Header>JSI を使っているライブラリ</Header>
+
+- [react-native-reanimated (v2)](https://github.com/software-mansion/react-native-reanimated)
+- [react-native-vision-camera](https://github.com/mrousavy/react-native-vision-camera)
+- [react-native-mmkv](https://github.com/mrousavy/react-native-mmkv)
+- [react-native-multithreading](https://github.com/mrousavy/react-native-multithreading)
+- [CommE2E](https://github.com/CommE2E/comm)
+- [react-native-quick-base64](https://github.com/craftzdog/react-native-quick-base64)
+- [react-native-quick-sqlite](https://github.com/ospfranco/react-native-quick-sqlite)
+
+---
+
+<Header>react-native-reanimated</Header>
+
+- Animation をネイティブ側で実装するためのライブラリ
+- JavaScript の処理を別スレッドで行う `worklet` の導入
+- JSI を使うにあたっていくつかヘルパー関数を提供している
+- 後述の`react-native-vision-camera`や`react-native-multithreading`で使用
+
+---
+
+<Header>react-native-vision-camera</Header>
+
+- JSI を用いた多機能なカメラライブラリ
+- 同期的に Snapchat のフィルターなどをつけれる
+
+---
+
+<Header>react-native-mmkv</Header>
+
+- JSI を用いた AsyncStorage の５０倍早い Key Value Pair
+- MMKV という c++製のライブラリを使ってる
+
+---
+
+<Header>react-native-multithreading</Header>
+
+- 処理をマルチスレッド化するためのライブラリ
+- JSI が同期的に実行するため、それを別スレッドに逃がすのに使用
+- JSI 関係なく重い処理を multithread 側に逃がす
+
+---
+
+<Header>react-native-quick-base64</Header>
+
+- 暗号化、復号化の処理を c++側で行うためのライブラリ
+
+---
+
+<Header>まとめ</Header>
+
+- JavaScript でやるには重い処理は JSI を使って c++ 側に回せる
+- TurboModules, Fabric の OSS 化も進んでる
+- JSI を用いた豊富なライブラリでアプリを高速化しよう
+
+---
+
+<Header>参考資料</Header>
+
+- [facebook/react-native/.../jsi.h](https://github.com/facebook/react-native/blob/HEAD/ReactCommon/jsi/jsi/jsi.h)
+- [JSI discussion](https://github.com/react-native-community/discussions-and-proposals/issues/91)
+- [Getting Started React Native JSI](https://blog.notesnook.com/getting-started-react-native-jsi/)
+- [Tweet about jsi + codegen](https://twitter.com/Ashoat/status/1418669067930677248)
+- [The New React Native Architecture Explained](https://formidable.com/blog/2019/jsi-jsc-part-2/)
+- [ReactNative アプリを 50 倍早く改善した方法](https://ichi.pro/reactnative-apuri-o-50-bai-hayaku-kaizenshita-hoho-21807260638852)
+
+---
+
+THANK YOU
+
+---
+
+## おまけ(未整理)
+
+---
+
+## JSI で使われるメソッドの軽いリファレンス
+
+---
+
+<AlignLeft>
+
+<Header>jsi::Function</Header>
+
+- JavaScript の Function 型を表すクラス
+
+```
+createFromHostFunction(
+  Runtime& runtime,
+  jsi::PropNameID& name,
+  unsigned int paramCount,
+  jsi::HostFunctionType func
+  )
+```
+
+- JavaScript 側から呼ばれたら c++を実行する関数を生成する関数
+
+</AlignLeft>
+
+---
+
+<Header>jsi::Runtime</Header>
+
+- `runtime.global().setProperty(runtime, propertyName)`
+- `runtime.global().getProperty(runtime, propertyName)`
+- `runtime.global().getPropertyAsObject(runtime, propertyName)`
+- `runtime.global().getPropertyAsFunction(runtime, propertyName)`
+
+---
+
+## jsi::Object
+
+JavaScript の Object 型を表すクラス
+
+- `setProperty`
+- `getProperty`
+- `asArray`
+- `asFunction`
+
+他にも weak ref を表す `WeakObject` が存在する
+
+---
+
+## jsi::Value
+
+JavaScript の Primitive 型を表すクラス
+
+- `isUndefined()`
+- `isNull()`
+- `isBool()`
+- `isNumber()`
+- `isString()`
+- `getBool()`
+- `getString()`
+  ...
+
+---
+
+## jsi::Array
+
+JavaScript の Array を表すクラス
+
+## jsi:PropNameID
+
+JavaScript の Property Key になり得る型
+
+---
+
+END

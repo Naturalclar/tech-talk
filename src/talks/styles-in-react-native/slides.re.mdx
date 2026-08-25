@@ -1,0 +1,263 @@
+import { Avatar, Profile } from '../../components';
+export { Themes } from '../../deck/Themes.tsx';
+
+## react-native における、Style との向き合いかた
+
+[meguro.css #7](https://megurocss.connpass.com/event/145780/)
+@naturalclar
+
+---
+
+## About Me
+
+<Avatar />
+<Profile />
+
+{/* まずは自己紹介です。Jesseと申します。アメリカ人です。 去年の9月に日本に引っ越してきました。 CureAppという会社で主にReact Native と TypeScript を扱った医療系のアプリを開発しています。 */}
+
+---
+
+## [react-native](https://facebook.github.io/react-native/)
+
+---
+
+<img src="../assets/react-native.png" />
+
+---
+
+### react-native
+
+- Cross Platform 開発が出来るフレームワーク
+  - iOS、Android 等
+- react を知っていれば似たような記法でかける。
+  - `<div>`や`<p>`などは使わない
+  - `<View>`や`<Text>`など独自のタグを使う
+
+---
+
+#### Hello World
+
+```jsx
+import React from "react";
+import { View, Text } from "react-native";
+
+export const HelloWorld = () => (
+  <View>
+    <Text>Hello World!</Text>
+  </View>
+);
+```
+
+---
+
+## react-native における Style
+
+---
+
+### react-native における Style
+
+- react-native は Web と書き方は似てる
+- CSS ファイルをそのまま使うことはできない
+
+---
+
+## StyleSheet
+
+---
+
+#### StyleSheet Example
+
+```jsx
+import React from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+
+type Props = {
+  isActive: boolean
+};
+
+export const Title = ({ isActive }: Props) => (
+  <View style={styles.container}>
+    <Text style={[styles.title, isActive && styles.activeTitle]} />
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: "#d6d7da"
+  },
+  title: {
+    fontSize: 19,
+    fontWeight: "bold"
+  },
+  activeTitle: {
+    color: "red"
+  }
+});
+```
+
+---
+
+#### StyleSheetを作成する
+
+```jsx {14-27}
+import React from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+
+type Props = {
+  isActive: boolean
+};
+
+export const Title = ({ isActive }: Props) => (
+  <View style={styles.container}>
+    <Text style={[styles.title, isActive && styles.activeTitle]} />
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: "#d6d7da"
+  },
+  title: {
+    fontSize: 19,
+    fontWeight: "bold"
+  },
+  activeTitle: {
+    color: "red"
+  }
+});
+```
+
+---
+
+#### Styleをあてる
+
+```jsx
+import React from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+
+type Props = {
+  isActive: boolean
+};
+
+export const Title = ({ isActive }: Props) => (
+  <View style={styles.container}>
+    <Text style={[styles.title, isActive && styles.activeTitle]} />
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: "#d6d7da"
+  },
+  title: {
+    fontSize: 19,
+    fontWeight: "bold"
+  },
+  activeTitle: {
+    color: "red"
+  }
+});
+```
+
+---
+
+#### 複数のStyleを配列で渡せる
+
+```jsx
+import React from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+
+type Props = {
+  isActive: boolean
+};
+
+export const Title = ({ isActive }: Props) => (
+  <View style={styles.container}>
+    <Text style={[styles.title, isActive && styles.activeTitle]} />
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: "#d6d7da"
+  },
+  title: {
+    fontSize: 19,
+    fontWeight: "bold"
+  },
+  activeTitle: {
+    color: "red"
+  }
+});
+```
+
+---
+
+## 要は CSS-in-JS
+
+---
+
+## react-native と Web の差
+
+---
+
+### react-native と Web の差
+
+- Display は基本 `flex`
+- flexDirection はデフォルトで`column`
+- ショートハンドは使えない
+- flex の微妙な差異
+
+---
+
+## Display は基本 `flex`
+
+- react-native は[yoga](https://github.com/facebook/yoga)を使って View を作成している
+- yoga は Cross Platform の FlexBox を実装するライブラリ
+
+---
+
+## flexDirection はデフォルトで`column`
+
+---
+
+## ショートハンドは使えない
+
+---
+
+## flex の微妙な差異
+
+---
+
+## Styling Tool
+
+- [styled-components](https://www.styled-components.com/)
+
+---
+
+## Component Libraries
+
+-　[react-native-paper](https://github.com/callstack/react-native-paper)
+
+- [react-native-ui-kitten](https://github.com/akveo/react-native-ui-kitten)
+
+- [react-native-elements](https://react-native-training.github.io/react-native-elements/)
+
+---
+
+## Debugging
+
+- [react-devtool](https://github.com/facebook/react-devtools/tree/v3)
+- [react-native-debugger](https://github.com/jhen0409/react-native-debugger)
+
+---
+
+ありがとうございました。
