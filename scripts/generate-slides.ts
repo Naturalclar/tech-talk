@@ -1,4 +1,5 @@
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import { exec } from 'child_process'
 import { createHash } from 'crypto'
@@ -25,6 +26,43 @@ const run = (cmd: string, env?: NodeJS.ProcessEnv): Promise<string> =>
       }
     )
   })
+
+// How many of the per-deck commands run at once.
+//
+// `Promise.all` over the deck list started all thirty at the same time, and
+// under that much load the build stopped being reproducible: shiki's *dark*
+// theme quietly fell back to a flat #919191 for whole code blocks — the
+// light theme was always fine — so which decks lost their syntax colours
+// changed from run to run. Three runs at thirty gave three different sites;
+// three runs bounded gave one, byte for byte, with ten more tokens keeping
+// their colour.
+//
+// It was not buying anything either: thirty at once took 28s against 21s
+// bounded, on the four cores a GitHub runner also has.
+//
+// The cap matters as much as the floor. A machine with more cores than there
+// are decks would otherwise be back to starting all of them at once, which
+// is the case that misbehaves.
+const CONCURRENCY = Math.min(Math.max(os.cpus().length, 2), 8)
+
+const mapWithLimit = async <T, R>(
+  items: readonly T[],
+  work: (item: T) => Promise<R>
+): Promise<R[]> => {
+  const results = new Array<R>(items.length)
+  let next = 0
+
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, items.length) }, async () => {
+      while (next < items.length) {
+        const index = next++
+        results[index] = await work(items[index])
+      }
+    })
+  )
+
+  return results
+}
 
 // The listing's own <head>. Every deck gets this written in by
 // generate-meta.ts from its meta.json; the page that links them all had a
@@ -124,18 +162,17 @@ const main = async () => {
   await run(`pnpm run build:css`)
 
   // Each deck is a vite build of the shared shell in src/deck, pointed at that
-  // deck's slides. They are independent, so they run together.
+  // deck's slides. They are independent, so they run together — CONCURRENCY at
+  // a time rather than all of them, for the reason recorded above it.
   const failed: string[] = []
-  await Promise.all(
-    decks.map(async (deck) => {
-      try {
-        await run(`pnpm exec vite build`, { DECK: deck.slug })
-      } catch (err) {
-        console.error(`[build] ${deck.slug} failed\n${(err as Error).message}`)
-        failed.push(deck.slug)
-      }
-    })
-  )
+  await mapWithLimit(decks, async (deck) => {
+    try {
+      await run(`pnpm exec vite build`, { DECK: deck.slug })
+    } catch (err) {
+      console.error(`[build] ${deck.slug} failed\n${(err as Error).message}`)
+      failed.push(deck.slug)
+    }
+  })
 
   const built = decks.filter((deck) => failed.indexOf(deck.slug) === -1)
 
@@ -147,26 +184,20 @@ const main = async () => {
 
   // The decks render in the browser, so their markup carries no metadata of
   // its own; it is written in here.
-  await Promise.all(
-    built.map((deck) =>
-      run(`pnpm run --silent build:meta ${deck.slug} ${deck.dir}`)
+  await mapWithLimit(built, (deck) =>
+    run(`pnpm run --silent build:meta ${deck.slug} ${deck.dir}`)
+  )
+
+  await mapWithLimit(built, (deck) =>
+    run(
+      `pnpm run --silent build:oembed ${deck.slug} ${deck.dir} > ./dist/${deck.slug}/oembed.json`
     )
   )
 
-  await Promise.all(
-    built.map((deck) =>
-      run(
-        `pnpm run --silent build:oembed ${deck.slug} ${deck.dir} > ./dist/${deck.slug}/oembed.json`
-      )
-    )
-  )
-
-  const deckCards = await Promise.all(
-    built.map(async (deck) => ({
-      html: await run(`pnpm run --silent build:index ${deck.slug} ${deck.dir}`),
-      publishedAt: metaFor(deck.slug).publishedAt,
-    }))
-  )
+  const deckCards = await mapWithLimit(built, async (deck) => ({
+    html: await run(`pnpm run --silent build:index ${deck.slug} ${deck.dir}`),
+    publishedAt: metaFor(deck.slug).publishedAt,
+  }))
 
   // Talks hosted elsewhere are rendered straight from their definition —
   // there is nothing to build or serve for them.
