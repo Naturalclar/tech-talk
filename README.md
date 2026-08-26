@@ -21,7 +21,17 @@ pnpm run new        # 新しいデッキの雛形を作る
 pnpm run build      # サイト全体を dist/ にビルド
 pnpm run lint
 pnpm run typecheck  # ビルドは型を見ないので、型チェックはこちら
+pnpm run test       # scripts/og-image.ts のみ。外部サーバに依存する唯一の箇所
+pnpm run format     # prettier。確認だけなら pnpm run format:check
 ```
+
+**push する前に通しておくのはこの 5 つです。** CI はこの順で回します:
+
+```
+pnpm run lint → pnpm run typecheck → pnpm run test → pnpm run format:check → pnpm run build
+```
+
+`format:check` は落ちやすいので注意してください。prettier は引数を複数行に折り返す形に書き換えるので、手で書いた 1 行がそのまま通るとは限りません。`pnpm run format` で直せます。
 
 ## デッキを追加する
 
