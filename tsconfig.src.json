@@ -1,0 +1,40 @@
+{
+  // src/ is what ships: the shared shell every deck renders through and the
+  // components thirty decks import. It was checked by nothing.
+  //
+  // tsconfig.json's comment used to say vite handled it, which is not what
+  // vite does — esbuild strips the annotations without reading them, the same
+  // way node does for scripts/. So a type error here was invisible until
+  // something rendered wrong, and two of them did: Layout.tsx passed React a
+  // `flexDirection: string` its own types reject.
+  //
+  // A second file rather than one `include` because the two halves resolve
+  // differently. scripts/ is node — `node18` resolution, `.ts` specifiers,
+  // `@types/node`. src/ is a bundler, with JSX, the DOM, and CSS imports.
+  "compilerOptions": {
+    // The components import each other as './Avatar', and CodeSteps reaches
+    // into the shell as '../deck/scroll-to-highlight.ts'. Only a bundler
+    // resolves both spellings, which is what builds this.
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    // No "node": nothing here runs in node, and pulling those globals in
+    // would let a browser file reference `process` without complaint.
+    "lib": ["es2023", "dom", "dom.iterable"],
+    // remdx's own package, same as for scripts/: a grammar error in a
+    // dependency is not something this repository can fix.
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2022",
+    "types": []
+  },
+  // The decks are deliberately absent, as they are from oxlint and prettier.
+  // Their MDX is not TypeScript, and the code in a slide is a sample of what
+  // was being talked about rather than something that has to compile.
+  "include": ["./src/components", "./src/deck", "./src/vite-env.d.ts"]
+}
