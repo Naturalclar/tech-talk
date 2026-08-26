@@ -3,6 +3,7 @@ import http from 'http'
 import os from 'os'
 import path from 'path'
 import { chromium, type Page } from 'playwright'
+import { contentType } from './mime.ts'
 
 const WIDTH = 1280
 const HEIGHT = 720
@@ -81,22 +82,6 @@ ${rejected}
   process.env.FONTCONFIG_FILE = configPath
 }
 
-const MIME: { [ext: string]: string } = {
-  '.css': 'text/css; charset=utf-8',
-  '.gif': 'image/gif',
-  '.html': 'text/html; charset=utf-8',
-  '.jpeg': 'image/jpeg',
-  '.jpg': 'image/jpeg',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.map': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.ttf': 'font/ttf',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-}
-
 // Serves dist/ as the site root rather than a single deck folder, so that a
 // deck at /<slug>/ resolves ../assets/foo.png the same way it does in
 // production. Decks reference shared images both through webpack's
@@ -121,10 +106,7 @@ const startServer = (): Promise<{ port: number; close: () => void }> =>
           res.end('not found')
           return
         }
-        const type = MIME[path.extname(filePath).toLowerCase()]
-        res.writeHead(200, {
-          'Content-Type': type || 'application/octet-stream',
-        })
+        res.writeHead(200, { 'Content-Type': contentType(filePath) })
         res.end(body)
       })
     })
