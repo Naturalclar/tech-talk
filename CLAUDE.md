@@ -154,6 +154,21 @@ A deck that wants a watermark parks an image behind the text with `position: abs
 
 `deck.css` gives `#root a` `position: relative; z-index: 1` so the links win that contest. Raising the links rather than dropping the image out of hit-testing is what makes it hold for slides nobody has written yet — whatever a deck parks behind its text, the text stays reachable. `position: relative` with no offsets moves nothing, and a deck that really does want something over a link can still say so, since an inline style outranks the sheet.
 
+### A slide too full for the slide is scaled down, not cut off
+
+Nothing scrolls a slide, so content taller than one is unreachable — during the talk and afterwards. Seventeen slides across eleven decks were in that state: `ncdu.png` ended 233px below the bottom of the slide it is the subject of, four other screenshots and a link were cut in half at the edge, and two `creating-your-own-github-actions` slides lost the end of a line of GraphQL sideways.
+
+`src/deck/fit-to-slide.ts` restores what CodeSurfer did for these decks before the migration: it measures the slide's content and, if it does not fit, scales the whole thing — heading, prose and screenshot in proportion — until it does. The seventeen need `0.727` to `0.992`. **A slide that already fits is measured, found to fit, and left alone**, so the other decks render exactly as before.
+
+Four things about it are worth knowing before touching it:
+
+- **Shrinking the image alone was tried first and is worse than the bug.** A flex item given `min-height: 0` gives up height without giving up width, so `object-fit: contain` letterboxes the picture inside a box of the wrong shape — `ncdu.png` came out **279x137** in a 1280px slide. A terminal capture nobody can read is not an improvement on one that is cut off. Under the scale it renders 613px wide.
+- **The space to fit into is the slide, not the column ReMDX puts the content in.** That column is laid out ~51px wider than the slide holding it, and the slide clips the difference — which is how a `pre` that fits its own box still loses its right-hand end, with no scrollbar to reach it with. Measuring against the column calls that a slide that fits.
+- **Scale about the column's origin and re-centre, not about its centre.** The content is not centred in the box to begin with, so scaling about the centre leaves it hanging out of the bottom — 88px of it, when this was first tried.
+- **What is inside a box that scrolls is not overflow**, and neither is an absolutely positioned watermark. Measuring through the first scales a slide to fit a 75-line file nobody is being shown all of; counting the second drags every slide carrying a 900px logo down to a quarter size. `contentBounds` skips both. The first version of the survey behind this missed the scroll case and reported 49 slides where there are 17.
+
+It watches the tree with a `MutationObserver` for the same reason `scroll-to-highlight.ts` does — ReMDX swaps slides itself and there is no event. The observer is `childList` only: writing the transform is an attribute change, and watching attributes too would have every fit trigger the next one.
+
 ### A named line range dims the rest of the block
 
 ReMDX's stylesheet points at a highlighted range by setting it bold on a pale blue band and leaving the rest of the file at full strength; CodeSurfer did the opposite, taking the rest back so the eye lands on the range. `deck.css` adds the dimming — `opacity: 0.35`, no blur, since these render at `0.5em` and even `blur(1px)` costs the surrounding lines the legibility that is the reason they are still on the slide.
