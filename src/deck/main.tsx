@@ -1,6 +1,7 @@
 import { render } from '@nkzw/remdx'
 import '@nkzw/remdx/style.css'
 import './deck.css'
+import { fitToSlide } from './fit-to-slide.ts'
 import { scrollToHighlight } from './scroll-to-highlight.ts'
 
 // Which deck this resolves to is decided by vite.config.ts from the DECK
@@ -10,5 +11,6 @@ const root = document.getElementById('root')!
 
 render(root, import('deck:slides'))
 
-// Has to come after render: it watches the tree remdx draws into.
+// Both have to come after render: they watch the tree remdx draws into.
 scrollToHighlight(root)
+fitToSlide(root)
