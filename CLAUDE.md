@@ -193,6 +193,8 @@ Shared React components live in `src/components` and are imported as `from '../.
 
 `Profile` is one component shared by decks given years apart, so they all name the same employer; it was edited in place in the repository they came from, and that is carried over rather than guessed at per deck. A deck scaffolded by `pnpm run new` starts with `<Profile />` rather than its own copy of the text, which is what stopped the two from drifting — the template still said CureApp long after the component said stand.fm. Its rules were `white` there, where the decks ran on code-surfer's dark theme — here they follow `currentColor`, because these render on the shared light one.
 
+**The affiliation is a prop** — `<Profile company="Engineer at CureApp" />` — for the deck that wants to say what was true when the talk was given. It defaults to the current one, so all thirty decks render exactly as before and the default stays the single place to edit when it changes again; **do not turn the default into a per-deck copy of the string**, which is the drift the shared component exists to prevent. Nothing else about the component is configurable: the name and the links are the same person in every deck, and the employer was the only field that ever went stale.
+
 Assets are shared across decks from `src/talks/assets/` and referenced as plain relative paths:
 
 ```jsx
