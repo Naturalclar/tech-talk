@@ -8,7 +8,7 @@ import { contentType } from './scripts/mime.ts'
 // One shared shell (src/deck) builds every deck: the DECK variable points the
 // `deck:slides` import at that deck's slides, and the output goes to its own
 // folder under dist/. Giving each deck its own index.html and entry point
-// instead would be eight copies of the same two files.
+// instead would be one copy of the same two files per deck.
 const deck = process.env.DECK
 
 if (!deck) {

@@ -148,6 +148,12 @@ Twenty-two of the thirty decks here were presented between 2019 and 2022 out of 
 
 `storybook-with-react-native` was **not** brought over: it is the same talk as `storybook-web-and-circleci`, which has been here since the start — RNStartup #2, 2019-02-21, the same slides down to the section order. The version in `talks` is a different revision (it has a section on `klank`, and lacks the `artifact-report.png` screenshot), not a different talk.
 
+### A slide's links sit above whatever is behind them
+
+A deck that wants a watermark parks an image behind the text with `position: absolute` and a low opacity — `react-native-rearchitecture-2021` opens with the Matsuri logo at 900px and `opacity: 0.2`. Taking an element out of the flow also takes it out of paint order: a positioned element paints over its in-flow siblings whatever the source order says. The logo therefore lay on top of the link beneath it and swallowed every click, and nothing looked wrong, because the thing on top was almost invisible.
+
+`deck.css` gives `#root a` `position: relative; z-index: 1` so the links win that contest. Raising the links rather than dropping the image out of hit-testing is what makes it hold for slides nobody has written yet — whatever a deck parks behind its text, the text stays reachable. `position: relative` with no offsets moves nothing, and a deck that really does want something over a link can still say so, since an inline style outranks the sheet.
+
 ### A named line range dims the rest of the block
 
 ReMDX's stylesheet points at a highlighted range by setting it bold on a pale blue band and leaving the rest of the file at full strength; CodeSurfer did the opposite, taking the rest back so the eye lands on the range. `deck.css` adds the dimming — `opacity: 0.35`, no blur, since these render at `0.5em` and even `blur(1px)` costs the surrounding lines the legibility that is the reason they are still on the slide.
