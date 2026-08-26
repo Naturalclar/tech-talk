@@ -195,6 +195,10 @@ Shared React components live in `src/components` and are imported as `from '../.
 
 **The affiliation is a prop** — `<Profile company="Engineer at CureApp" />` — for the deck that wants to say what was true when the talk was given. It defaults to the current one, so all thirty decks render exactly as before and the default stays the single place to edit when it changes again; **do not turn the default into a per-deck copy of the string**, which is the drift the shared component exists to prevent. Nothing else about the component is configurable: the name and the links are the same person in every deck, and the employer was the only field that ever went stale.
 
+`Layout` wraps every slide of `review-efficiently-with-artifact`, and is used by nothing else. **It measured its heights in `vw`** — `height: 100vw` on the container, `20vw`/`30vw`/`20vw` for a header band, the body and a footer band — which is a width, so on a 1280x720 slide the container came out 1024px tall and the content ran to 1005px in a viewport that does not scroll. All fifteen slides lost their bottom third, the title slide's link was cut in half at the edge, and that slide is the deck's `og:image`. `vh` is almost certainly what was meant; `%` against the slide is what it uses now.
+
+**The two bands are gone rather than resized, and should stay gone.** They were empty divs painted `aquamarine` — a named colour with no relation to the shared theme, and nothing was ever rendered inside them. At 20% each they took 288px off a 720px slide, and this deck's slides carry a heading, a rule and a screenshot up to 400px tall, which does not fit in what is left. Restoring them is two divs if they turn out to have been deliberate.
+
 Assets are shared across decks from `src/talks/assets/` and referenced as plain relative paths:
 
 ```jsx
