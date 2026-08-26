@@ -127,28 +127,75 @@ const INDEX = '.'
 const shoot = async (page: Page, port: number, slug: string): Promise<void> => {
   const index = slug === INDEX
 
-  await page.goto(`http://127.0.0.1:${port}/${index ? '' : `${slug}/`}`, {
-    waitUntil: 'networkidle',
-    timeout: 30000,
+  // A deck that names a component nothing defines compiles cleanly and then
+  // throws while rendering, leaving #root empty. That used to surface as the
+  // wait below timing out thirty seconds later with nothing to say; catching
+  // the error itself fails at once and names it.
+  // It has to be a promise rather than a flag checked afterwards: the deck
+  // never paints, so the wait below would spend its full thirty seconds first
+  // and report the timeout instead of the error that caused it. Raced against
+  // the wait, whichever happens first is what gets reported.
+  let onError = (_: Error) => {}
+  const threw = new Promise<never>((_, reject) => {
+    onError = (error: Error) => reject(new Error(error.message.split('\n')[0]))
   })
+  page.on('pageerror', onError)
+  // Nothing awaits this promise unless the race below does, and an unobserved
+  // rejection would take the process down with it.
+  threw.catch(() => {})
 
-  // The decks render client side, so an empty #root means the slide has not
-  // been painted yet and the screenshot would come out blank. The landing
-  // page is plain HTML written by the build; it has no #root to wait on.
-  if (!index) {
-    await page.waitForFunction(
-      () => {
-        const root = document.getElementById('root')
-        return !!root && root.childElementCount > 0
-      },
-      { timeout: 30000 }
-    )
+  try {
+    await page.goto(`http://127.0.0.1:${port}/${index ? '' : `${slug}/`}`, {
+      waitUntil: 'networkidle',
+      timeout: 30000,
+    })
+
+    // The decks render client side, so an empty #root means the slide has not
+    // been painted yet and the screenshot would come out blank. The landing
+    // page is plain HTML written by the build; it has no #root to wait on.
+    if (!index) {
+      await Promise.race([
+        page.waitForFunction(
+          () => {
+            const root = document.getElementById('root')
+            return !!root && root.childElementCount > 0
+          },
+          { timeout: 30000 }
+        ),
+        threw,
+      ])
+    }
+
+    // An image the deck points at but the site does not have. The build had
+    // no opinion about this before: vite does not resolve these paths — they
+    // are plain strings in the markup — and the screenshot succeeded, so a
+    // deck could go out with the broken-image icon baked into its own
+    // og:image. remdx draws every slide into the DOM at once, so this covers
+    // the whole deck rather than the slide being photographed.
+    //
+    // Decks only. The landing page's thumbnails for talks hosted elsewhere
+    // come from other people's servers, and the rule there is that every
+    // failure ends in a card and never a failed deploy — og-image.ts already
+    // checks those addresses load and falls back to a placeholder when they
+    // do not.
+    if (!index) {
+      const broken = await page.evaluate(() =>
+        [...document.images]
+          .filter((image) => image.complete && image.naturalWidth === 0)
+          .map((image) => image.getAttribute('src'))
+      )
+      if (broken.length) {
+        throw new Error(`broken image(s): ${[...new Set(broken)].join(', ')}`)
+      }
+    }
+
+    await page.screenshot({
+      path: path.join(distDir, `${index ? 'index' : slug}.png`),
+      clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT },
+    })
+  } finally {
+    page.off('pageerror', onError)
   }
-
-  await page.screenshot({
-    path: path.join(distDir, `${index ? 'index' : slug}.png`),
-    clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT },
-  })
 }
 
 const main = async () => {

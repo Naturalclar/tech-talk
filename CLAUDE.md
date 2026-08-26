@@ -173,7 +173,11 @@ Every deck starts with the same preamble (see `.scaffdog/template.md`): `export 
 - **There are no HTML comments.** `<!-- … -->` is a parse error (`Unexpected character !`), not a comment. Use `{/* … */}`.
 - **An unknown capitalised tag is a runtime error, not markup.** MDX 1 left `<Note>` — a typo for mdx-deck's `<Notes>` — on the page; MDX 3 compiles it to a component reference and the deck renders nothing at all, with `Expected component 'Note' to be defined` on the console. The build does not catch this; only opening the deck does.
 
-Because ReMDX draws every slide into the DOM at once, opening a deck and looking for `pageerror` and for `img.naturalWidth === 0` checks the whole deck, not just the slide on screen.
+Because ReMDX draws every slide into the DOM at once, opening a deck and looking for `pageerror` and for `img.naturalWidth === 0` checks the whole deck, not just the slide on screen. **`generate-screenshot.ts` does both**, on the page it already has open: a deck that names an undefined component or points at an image the site does not have fails the build there. Nothing earlier has an opinion about either — vite never resolves `../assets/*`, because those are plain strings in the markup, not imports.
+
+The `pageerror` check is **raced against** the wait for `#root`, not read after it. A deck that throws while rendering never paints, so the wait would spend its full thirty seconds first and report its own timeout instead of the error that caused it — the migration's `<Note>` typo surfaced that way. Raced, it fails in about three seconds and names the component.
+
+Neither check runs for the landing page. Its thumbnails for talks hosted elsewhere come from servers nobody here controls, and the rule there is that every failure ends in a card and never a failed deploy; `og-image.ts` already checks those addresses load.
 
 `meta.json` is what produces all OG/Twitter/oEmbed metadata — a deck without it fails the build.
 
