@@ -247,7 +247,7 @@ const main = async () => {
   // Nothing links to a deck except the landing page, and the decks link
   // nowhere at all — they render in the browser, so a crawler that does not
   // run scripts sees an empty shell. A sitemap is the only thing telling one
-  // that the eight deck URLs exist.
+  // that the deck URLs exist at all.
   //
   // lastmod is the date the talk was given, not the date of the build. It is
   // the closest thing to "when this page's content changed", and it does not

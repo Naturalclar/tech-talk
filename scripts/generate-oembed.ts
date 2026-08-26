@@ -4,7 +4,7 @@ import { SITE_URL } from './site.ts'
 const [slug, deckDir] = process.argv.slice(2)
 
 // The title used to be left empty, so consumers that expanded a link had
-// nothing to label it with. It comes from the deck's own <Meta /> now.
+// nothing to label it with. It comes from the deck's meta.json now.
 const title = deckDir ? parseMeta(deckDir, slug).title : ''
 
 const oEmbed = {
