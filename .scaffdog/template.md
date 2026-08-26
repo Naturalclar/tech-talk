@@ -22,6 +22,7 @@ questions:
 # `{{ inputs.slug }}/slides.re.mdx`
 
 ````md
+import { Profile } from '../../components';
 export { Themes } from '../../deck/Themes.tsx';
 
 ## {{ inputs.title }}
@@ -30,11 +31,7 @@ export { Themes } from '../../deck/Themes.tsx';
 
 ## 自己紹介
 
-<img src="../assets/cat.jpg" height="250" />
-
-- Jesse Katsumata アメリカ人 :flag-us:
-- CureApp - React Native を使った治療アプリの開発
-- Twitter: [@natural_clar](https://twitter.com/natural_clar) Github: [@Naturalclar](https://github.com/Naturalclar)
+<Profile />
 
 ---
 

@@ -185,7 +185,7 @@ Neither check runs for the landing page. Its thumbnails for talks hosted elsewhe
 
 Shared React components live in `src/components` and are imported as `from '../../components'`: `Layout`, `Page`, `Avatar`, `CodeSteps`, and — added with the talks migration — `Profile`, `Logo`, `Title`, `Header`, `Center`, `AlignLeft`, `Link`.
 
-`Profile` is one component shared by decks given years apart, so they all name the same employer; it was edited in place in the repository they came from, and that is carried over rather than guessed at per deck. Its rules were `white` there, where the decks ran on code-surfer's dark theme — here they follow `currentColor`, because these render on the shared light one.
+`Profile` is one component shared by decks given years apart, so they all name the same employer; it was edited in place in the repository they came from, and that is carried over rather than guessed at per deck. A deck scaffolded by `pnpm run new` starts with `<Profile />` rather than its own copy of the text, which is what stopped the two from drifting — the template still said CureApp long after the component said stand.fm. Its rules were `white` there, where the decks ran on code-surfer's dark theme — here they follow `currentColor`, because these render on the shared light one.
 
 Assets are shared across decks from `src/talks/assets/` and referenced as plain relative paths:
 

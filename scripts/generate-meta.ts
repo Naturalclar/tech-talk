@@ -41,6 +41,15 @@ const main = () => {
   const description = escapeAttr(meta.description)
 
   const tags = [
+    // `og:description` is what a link unfurler reads; this is the one that
+    // ends up in a search result. The landing page has carried both since it
+    // got metadata of its own — the decks only ever had the OG half.
+    `<meta name="description" content="${description}"/>`,
+    // The relative `base` means a deck answers on more than one origin —
+    // slides.naturalclar.dev and <user>.github.io/tech-talk — which is
+    // deliberate, and is exactly why the pages have to name which of them is
+    // the real address. The sitemap and og:url already agree on this one.
+    `<link rel="canonical" href="${SITE_URL}/${meta.slug}/"/>`,
     `<meta name="twitter:description" content="${description}"/>`,
     `<meta property="og:description" content="${description}"/>`,
     `<meta property="og:locale" content="ja_JP"/>`,
@@ -49,7 +58,11 @@ const main = () => {
     `<meta property="og:url" content="${SITE_URL}/${meta.slug}/"/>`,
     `<meta property="og:image" content="${SITE_URL}/${meta.slug}.png"/>`,
     `<meta property="article:author" content="naturalclar"/>`,
-    `<meta name="twitter:card" content="summary"/>`,
+    // The image is generate-screenshot.ts's 1280x720, which is the shape
+    // summary_large_image wants; `summary` crops it to a small square and
+    // takes the title slide's ends off with it. The landing page has said
+    // summary_large_image about the same image all along.
+    `<meta name="twitter:card" content="summary_large_image"/>`,
     `<meta name="twitter:title" content="${title}"/>`,
     `<meta name="twitter:image" content="${SITE_URL}/${meta.slug}.png"/>`,
     `<link rel="alternate" type="application/json+oembed" href="${SITE_URL}/${meta.slug}/oembed.json" title="${title}"/>`,
