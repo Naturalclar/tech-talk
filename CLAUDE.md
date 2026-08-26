@@ -18,7 +18,7 @@ There are no deploy previews. A pull request uploads `dist/` as the `slides` art
 pnpm install
 pnpm run build            # runs scripts/generate-slides.ts src/talks — full site build into dist/
 pnpm run lint             # oxlint
-pnpm run typecheck        # tsc (noEmit) over scripts/
+pnpm run typecheck        # tsc (noEmit) over scripts/, then over src/
 pnpm run format:check     # prettier --check . (pnpm run format to fix)
 pnpm run new              # scaffdog: scaffold src/talks/<slug>/, asking for slug, title and date
 pnpm start <slug>         # dev server for one deck; omit the slug to list them
@@ -35,7 +35,7 @@ The remaining `build:*` scripts (`build:screenshot`, `build:meta`, `build:oembed
 
 Two consequences follow from that, and both are easy to trip over:
 
-- **Nothing type-checks during a build.** Node erases the annotations without reading them, so a type error is invisible until `pnpm run typecheck` runs. That is why CI has its own step for it; `tsconfig.json` is `noEmit` and exists only for that command and the editor.
+- **Nothing type-checks during a build.** Node erases the annotations without reading them, so a type error is invisible until `pnpm run typecheck` runs. That is why CI has its own step for it; `tsconfig.json` is `noEmit` and exists only for that command and the editor. **The same is true of `src/`** — vite strips types with esbuild rather than checking them, so the deck shell and the shared components are in exactly the same position as `scripts/`, and are covered by `tsconfig.src.json`. See _Lint scope_.
 - **The package is ESM** (`"type": "module"`). `__dirname` does not exist — use `import.meta.dirname` — and **relative imports need the `.ts` extension** (`from './card.ts'`), which is what `allowImportingTsExtensions` is for. Anything node cannot erase (`enum`, `namespace`, parameter properties) fails the build instead of surprising you at runtime, via `erasableSyntaxOnly`.
 
 `"type": "module"` reaches past `scripts/` — a `.js` config file anywhere in the repo is now ESM too, which is why `.prettierrc.js` and `.scaffdog/config.js` are `export default` rather than `module.exports`.
@@ -232,7 +232,15 @@ Sizes are otherwise close to what they need to be — most of these images rende
 
 ### Lint scope
 
-`pnpm run lint` is oxlint, configured by `.oxlintrc.json`. It runs the `correctness` category over `src/` and `scripts/`; `src/talks` is in `ignorePatterns`, so deck MDX files and their code snippets are never linted. `scripts/` is additionally type-checked by `tsc` (strict).
+`pnpm run lint` is oxlint, configured by `.oxlintrc.json`. It runs the `correctness` category over `src/` and `scripts/`; `src/talks` is in `ignorePatterns`, so deck MDX files and their code snippets are never linted.
+
+**`pnpm run typecheck` is two `tsc` runs, not one**, because the two halves of the repository resolve differently: `tsconfig.json` covers `scripts/` as node sees it (`node18` resolution, `.ts` specifiers, `@types/node`), and `tsconfig.src.json` covers `src/components` and `src/deck` as a bundler sees them (`bundler` resolution, JSX, the DOM, no node globals). Both are `strict` and `noEmit`.
+
+`src/` went unchecked for a long time under a comment in `tsconfig.json` saying vite handled it — **it does not**, for the same reason node does not handle `scripts/`. Turning the check on surfaced two components handing React a `flexDirection: string` its own types reject, which is the shape of the bug that made every slide of `review-efficiently-with-artifact` overflow.
+
+Two things the `src/` half needs that the other does not, both in `src/vite-env.d.ts`: `vite/client`, for the side-effect CSS imports in `main.tsx`, and a declaration for **`deck:slides`**, which is not a file — `vite.config.ts` aliases it at the chosen deck's `slides.re.mdx`. It is declared with the shape `render` wants (a default export of `ReMDXSlide[]`, plus `Themes`) rather than as `unknown`, which type-checks the import and then fails at the call.
+
+`src/talks` is excluded here too. Deck MDX is not TypeScript, and the code in a slide is a sample of what was being talked about rather than something that has to compile.
 
 **oxlint does not format.** ESLint used to report formatting through `eslint-plugin-prettier`, so a single `lint` run covered both. Formatting is now its own command — `pnpm run format:check`, with `pnpm run format` to fix — and CI runs it as a separate step. `.prettierignore` excludes `src/talks` too: the decks have never been formatted, and reflowing MDX is an easy way to break it.
 

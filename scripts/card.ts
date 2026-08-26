@@ -48,9 +48,22 @@ export const renderCard = ({
   // something, and a letterboxed image had no edge at all where its grey met
   // the white below it. mb-0 keeps the gap to the title the padding of the
   // block underneath, so it does not double up.
+  //
+  // `loading="lazy"` because the listing is thirty cards and about two rows of
+  // them are on screen: without it a visitor downloaded all thirty
+  // screenshots, 1.09MB, before seeing any of the page, and it grows by one
+  // every time a talk is added. Nothing jumps when the rest arrive — the box
+  // is `aspect-video`, so it is the same size before the request finishes,
+  // after it fails, and for the placeholder.
+  //
+  // Every card gets it, including the first row. A browser fetches a lazy
+  // image that is already in the viewport immediately, so there is nothing to
+  // win by exempting them — and picking the first n by hand would mean this
+  // template no longer renders both kinds of card the same way, which is the
+  // whole reason it is one template.
   const image = thumbnail
     ? `<div class="relative m-4 mb-0 aspect-video overflow-hidden rounded-md border border-gray-200 bg-gray-100">
-              <img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" class="absolute inset-0 h-full w-full object-contain" />
+              <img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-contain" />
             </div>`
     : `<div class="m-4 mb-0 flex aspect-video items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
 
