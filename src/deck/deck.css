@@ -16,6 +16,25 @@
   max-width: 100%;
 }
 
+/* A slide that carries a watermark puts the image behind the text with
+   `position: absolute` and a low opacity — react-native-rearchitecture-2021
+   opens with the Matsuri logo at 900px and 0.2. Taking it out of the flow
+   also takes it out of paint order: a positioned element paints over its
+   in-flow siblings whatever the source order says, so the logo lay on top of
+   the link underneath it and swallowed the clicks. Nothing looked wrong,
+   because the thing on top was almost invisible.
+
+   Raising the links instead of dropping the image out of hit-testing is what
+   makes this hold for slides nobody has written yet: whatever a deck parks
+   behind its text, the text stays reachable. `position: relative` with no
+   offsets moves nothing; it only buys the link a place in the stacking
+   order. A deck that really wants something over a link can still say so —
+   an inline style outranks this. */
+#root a {
+  position: relative;
+  z-index: 1;
+}
+
 /* remdx sets a 36px base and `pre { font-size: 1em }`, so code renders at the
    same size as prose: about 52 columns across, and nine or ten lines under a
    heading. Nothing here wraps or scrolls either — `white-space: pre` with
