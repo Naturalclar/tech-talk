@@ -36,19 +36,19 @@
   "devDependencies": {
     "@nkzw/vite-plugin-remdx": "^20.0.0",
     "@tailwindcss/cli": "^4.3.3",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.4.0",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "@vitejs/plugin-react": "^6.0.5",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
     "cpx2": "^9.0.0",
-    "oxlint": "^1.78.0",
+    "oxlint": "^1.80.0",
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "rimraf": "^6.1.3",
     "scaffdog": "^4.1.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "vite": "^8.2.1"
+    "vite": "^8.2.2"
   },
   "pnpm": {
     "overrides": {
