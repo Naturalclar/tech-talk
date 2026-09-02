@@ -8,10 +8,15 @@
 // was given down until it fit. That is what went missing in the ReMDX
 // migration, and it is what this restores: the slide's content is measured,
 // and if it does not fit it is scaled — heading, prose and screenshot
-// together, in proportion — until it does. The seventeen need 0.727 to 0.992,
-// so the worst affected loses a quarter of its size and most lose under a
-// tenth. Every other slide in every deck is left alone: a slide that already
+// together, in proportion — until it does. Thirteen still need it, at 0.727
+// to 0.961: the worst affected loses a quarter of its size and most lose under
+// a tenth. Every other slide in every deck is left alone: a slide that already
 // fits is measured, found to fit, and never touched.
+//
+// Four of the original seventeen were never too full. They sat in a component
+// sized `100vw`, a few pixels wider than the slide, and were being scaled by
+// 0.992 to cover for it. A scale that close to 1 is that bug, not this one's
+// job — fix the box.
 //
 // Shrinking the image alone was tried first and is worse than the bug. A flex
 // item given `min-height: 0` gives up height without giving up width, so

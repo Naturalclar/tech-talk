@@ -158,7 +158,7 @@ A deck that wants a watermark parks an image behind the text with `position: abs
 
 Nothing scrolls a slide, so content taller than one is unreachable — during the talk and afterwards. Seventeen slides across eleven decks were in that state: `ncdu.png` ended 233px below the bottom of the slide it is the subject of, four other screenshots and a link were cut in half at the edge, and two `creating-your-own-github-actions` slides lost the end of a line of GraphQL sideways.
 
-`src/deck/fit-to-slide.ts` restores what CodeSurfer did for these decks before the migration: it measures the slide's content and, if it does not fit, scales the whole thing — heading, prose and screenshot in proportion — until it does. The seventeen need `0.727` to `0.992`. **A slide that already fits is measured, found to fit, and left alone**, so the other decks render exactly as before.
+`src/deck/fit-to-slide.ts` restores what CodeSurfer did for these decks before the migration: it measures the slide's content and, if it does not fit, scales the whole thing — heading, prose and screenshot in proportion — until it does. Thirteen still need it, at `0.727` to `0.961` — four of the original seventeen were not too full at all but sat in a component sized `100vw` (`Page`, `Center`), and dropped out once those were fixed. **A slide that already fits is measured, found to fit, and left alone**, so the other decks render exactly as before. **The fitter is a backstop for content, not for a component's sizing mistake**: when a slide is scaled by `0.99`, the cause is a box a few pixels too wide, and the fix is the box.
 
 Four things about it are worth knowing before touching it:
 
