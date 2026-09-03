@@ -7,5 +7,13 @@
   "rules": {
     "no-console": "off"
   },
-  "ignorePatterns": ["dist", "src/talks"]
+  "ignorePatterns": ["dist", "src/talks"],
+  "overrides": [
+    {
+      "files": ["src/**"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "error"
+      }
+    }
+  ]
 }

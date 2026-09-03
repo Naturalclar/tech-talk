@@ -242,6 +242,8 @@ Two things the `src/` half needs that the other does not, both in `src/vite-env.
 
 `src/talks` is excluded here too. Deck MDX is not TypeScript, and the code in a slide is a sample of what was being talked about rather than something that has to compile.
 
+**`react-hooks/rules-of-hooks` is on for `src/` only, through `overrides`.** The `correctness` category does not include it, so a Hook called inside an `if` linted clean — which matters because `CodeSteps` is the one component here with real state, four Hooks, and a keyboard handler racing ReMDX's own. It cannot be turned on repository-wide: the rule reads any `use*` call as a Hook, and `generate-screenshot.ts` calls `useBundledFonts()` from `main()`, which is not one. Scoping it to the directory that has React in it is what keeps that from being a rename to appease a linter.
+
 **oxlint does not format.** ESLint used to report formatting through `eslint-plugin-prettier`, so a single `lint` run covered both. Formatting is now its own command — `pnpm run format:check`, with `pnpm run format` to fix — and CI runs it as a separate step. `.prettierignore` excludes `src/talks` too: the decks have never been formatted, and reflowing MDX is an easy way to break it.
 
 ## Style
