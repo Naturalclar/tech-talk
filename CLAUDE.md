@@ -171,6 +171,13 @@ Four things about it are worth knowing before touching it:
 
 It watches the tree with a `MutationObserver` for the same reason `scroll-to-highlight.ts` does — ReMDX swaps slides itself and there is no event. The observer is `childList` only: writing the transform is an attribute change, and watching attributes too would have every fit trigger the next one.
 
+**The build checks that it still works.** `findOverflow` in `generate-screenshot.ts` runs after each deck's screenshot and fails the build on content past the edge of its slide. Without it the fitter is a thing that can stop running silently — the selector it walks is ReMDX's DOM shape, so a version bump could make `slidesIn` return nothing and thirteen slides would quietly go back to losing their bottom third, with a green build. Commenting out the `fitToSlide(root)` call in `main.tsx` fails eight decks by name, which is how the check was confirmed to bite.
+
+Two things make it cheap enough to run every build — about 1.5s of a 65s build, because the page is already open for the screenshot:
+
+- **Every slide is already in the tree**, hidden with `display: none`. Revealing them all and then appending and removing one node inside `#root` fires the fitter's own observer over the whole deck, so one page load measures every slide. **Navigating to each slide instead costs 300ms a slide** — three and a half minutes across the site — and stepping through with arrow keys is far worse still at 5s a slide, because each one waits out ReMDX's transition.
+- **It asserts only that nothing is past the edge**, not how far a slide had to be scaled. Everything that needs scaling gets it, and a floor on the ratio would be a guess about legibility rather than a defect.
+
 ### A named line range dims the rest of the block
 
 ReMDX's stylesheet points at a highlighted range by setting it bold on a pale blue band and leaving the rest of the file at full strength; CodeSurfer did the opposite, taking the rest back so the eye lands on the range. `deck.css` adds the dimming — `opacity: 0.35`, no blur, since these render at `0.5em` and even `blur(1px)` costs the surrounding lines the legibility that is the reason they are still on the slide.

@@ -124,6 +124,109 @@ const startServer = (): Promise<{ port: number; close: () => void }> =>
 // once sent every deck's build output into the root of dist/.
 const INDEX = '.'
 
+// Content past the edge of the slide it is on. Nothing scrolls a slide, so
+// that content cannot be reached — which is the whole reason
+// src/deck/fit-to-slide.ts exists. This is the check that it is still working:
+// seventeen slides were in that state before it, and if it ever stops running
+// they go back to it silently, with a build that passes and decks that lose
+// their bottom third.
+//
+// The measurement is only possible because every slide is already in the tree.
+// remdx hides the ones it is not showing with `display: none`, so they measure
+// zero; revealing them all and then appending and removing one node inside
+// #root fires the fitter's own MutationObserver over the lot. That costs about
+// 90ms for a fifty-slide deck against 300ms *per slide* for navigating to each
+// one, which was the first thing tried and is too slow to run on every build.
+//
+// It is deliberately not a check on how far a slide had to be scaled. Every
+// one that needs scaling gets it, and a floor on the ratio would be a guess
+// about legibility rather than a defect — the worst today is 0.727 and is
+// perfectly readable.
+const findOverflow = async (page: Page): Promise<string[]> =>
+  page.evaluate(() => {
+    const slides = [
+      ...document.querySelectorAll<HTMLElement>('#root > div > div > div'),
+    ]
+    if (!slides.length) {
+      return ['no slides found — the tree fit-to-slide.ts walks has changed']
+    }
+
+    const saved = slides.map((slide) => slide.getAttribute('style'))
+    for (const slide of slides) {
+      slide.style.display = 'block'
+      slide.style.opacity = '1'
+      slide.style.visibility = 'visible'
+    }
+
+    const root = document.getElementById('root')!
+    const poke = document.createElement('span')
+    root.append(poke)
+    poke.remove()
+
+    return new Promise<string[]>((resolve) => {
+      // One frame for the fitter's own requestAnimationFrame, one to let what
+      // it wrote take effect.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const over: string[] = []
+
+          slides.forEach((slide, index) => {
+            const box = slide.getBoundingClientRect()
+            // The same two exclusions the fitter makes when it measures: a
+            // watermark is out of the flow, and what is inside a box that
+            // scrolls is reachable rather than lost.
+            const walk = (parent: Element): void => {
+              for (const child of parent.children) {
+                const style = getComputedStyle(child)
+                if (
+                  style.position === 'absolute' ||
+                  style.position === 'fixed'
+                ) {
+                  continue
+                }
+                const rect = child.getBoundingClientRect()
+                if (!rect.width && !rect.height) {
+                  continue
+                }
+                // Two pixels of tolerance: a scale lands on a fraction of a
+                // pixel, and rounding is not something an audience can see.
+                const below = Math.round(rect.bottom - box.bottom)
+                const past = Math.round(rect.right - box.right)
+                if (below > 2 || past > 2) {
+                  const how = [
+                    below > 2 ? `${below}px below the bottom` : '',
+                    past > 2 ? `${past}px past the right edge` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' and ')
+                  over.push(
+                    `slide ${index}: <${child.tagName.toLowerCase()}> ${how}`
+                  )
+                  return
+                }
+                if (!/auto|scroll/.test(style.overflowX + style.overflowY)) {
+                  walk(child)
+                }
+              }
+            }
+            walk(slide)
+          })
+
+          slides.forEach((slide, index) => {
+            const style = saved[index]
+            if (style === null) {
+              slide.removeAttribute('style')
+            } else {
+              slide.setAttribute('style', style)
+            }
+          })
+
+          resolve(over)
+        })
+      )
+    })
+  })
+
 const shoot = async (page: Page, port: number, slug: string): Promise<void> => {
   const index = slug === INDEX
 
@@ -189,10 +292,31 @@ const shoot = async (page: Page, port: number, slug: string): Promise<void> => {
       }
     }
 
+    // The landing page's thumbnails are `loading="lazy"`, and a lazy image
+    // starts loading from layout rather than from parsing — after the point
+    // `networkidle` calls the page settled. Which of the ones near the fold
+    // had arrived when the shutter came down therefore varied per run, and
+    // dist/index.png came out a different size on every build: 71533, 71518
+    // and 71460 bytes over three. That is the reproducibility bounding the
+    // deck builds bought back, lost again in the last stage.
+    //
     await page.screenshot({
       path: path.join(distDir, `${index ? 'index' : slug}.png`),
       clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT },
     })
+
+    // After the screenshot, because it reveals every slide at once and the
+    // photograph wants the deck as a presenter sees it. Decks only: the
+    // landing page has no slides, and its own overflow is a different
+    // question that the responsive layout already answers.
+    if (!index) {
+      const over = await findOverflow(page)
+      if (over.length) {
+        throw new Error(
+          `content past the edge of the slide:\n  ${over.join('\n  ')}`
+        )
+      }
+    }
   } finally {
     page.off('pageerror', onError)
   }
