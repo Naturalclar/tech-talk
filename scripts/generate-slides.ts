@@ -161,6 +161,15 @@ const main = async () => {
   await run(`pnpm run build:assets`)
   await run(`pnpm run build:css`)
 
+  // Both shells ask for /favicon.svg, so it has to sit at the root of the
+  // site rather than in dist/assets/ — that directory answers on /assets/,
+  // which is not where either page is pointing. It is one file, so it is
+  // copied here rather than given a build:* script of its own.
+  fs.copyFileSync(
+    path.join(import.meta.dirname, '..', 'src', 'favicon.svg'),
+    path.join(import.meta.dirname, '..', 'dist', 'favicon.svg')
+  )
+
   // Each deck is a vite build of the shared shell in src/deck, pointed at that
   // deck's slides. They are independent, so they run together — CONCURRENCY at
   // a time rather than all of them, for the reason recorded above it.

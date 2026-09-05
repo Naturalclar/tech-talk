@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>登壇スライド置き場</title>
+  <!-- A slide with a title line on it. Drawn for 16px, which is the size a
+       browser tab actually renders: two lines of "text" merge into a grey
+       smudge at that size, and the shape without any is a plain rectangle
+       with nothing to recognise. One bar is what survives.
+
+       Dark ground rather than a light one so it holds its edge against both
+       a light and a dark tab strip — an inverted version disappears into a
+       white toolbar. -->
+  <rect width="32" height="32" rx="7" fill="#111827" />
+  <rect x="5" y="8" width="22" height="14" rx="2" fill="#ffffff" />
+  <rect x="8" y="13" width="12" height="3" rx="1.5" fill="#111827" />
+</svg>

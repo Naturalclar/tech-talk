@@ -54,9 +54,37 @@ const serveSharedAssets = (): Plugin => ({
         return next()
       }
 
-      const file = path.join(assetsDir, decodeURIComponent(url.slice(8)))
-      if (!file.startsWith(assetsDir) || !fs.existsSync(file)) {
+      let file: string
+      try {
+        file = path.join(assetsDir, decodeURIComponent(url.slice(8)))
+      } catch {
+        // A stray `%` is not a valid escape, and decodeURIComponent throws on
+        // it. Left to propagate that is a 500 out of the dev server for a
+        // typo in a filename.
         return next()
+      }
+
+      // Not an answer this middleware is entitled to give. Anything that
+      // climbed out of the assets directory goes back to vite, which is what
+      // asked for it in the first place.
+      if (!file.startsWith(assetsDir)) {
+        return next()
+      }
+
+      // A miss is a 404, not something to hand back to vite. Passing it on
+      // lands it in the SPA fallback, which answers `200 text/html` — so a
+      // deck that names an asset it does not have drew nothing, with no 404
+      // in the network panel and no error in the console. That is the same
+      // silence this middleware was written to fix for assets that do exist,
+      // and it is worst while a deck is being written, which is the one time
+      // the images matter.
+      //
+      // Nothing but the shared assets is served under `/assets/`, so there is
+      // no other handler further down that could have answered this.
+      if (!fs.existsSync(file)) {
+        response.statusCode = 404
+        response.setHeader('Content-Type', 'text/plain; charset=utf-8')
+        return response.end(`no such shared asset: ${url}\n`)
       }
 
       response.setHeader('Content-Type', contentType(file))
