@@ -33,8 +33,10 @@ export const parsePublishedAt = (
   return value
 }
 
-// Rendered into the card. Deliberately not toLocaleDateString: the build
-// machine's locale is not the reader's, and Netlify's is not this one's.
+// Rendered into the card. Deliberately not toLocaleDateString: the locale of
+// whatever machine happens to run the build is not the reader's, and a date
+// that reads differently depending on where it was built is worse than one
+// fixed format for everyone.
 export const formatPublishedAt = (value: string): string =>
   value.replaceAll('-', '.')
 

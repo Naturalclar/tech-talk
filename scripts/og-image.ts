@@ -110,12 +110,16 @@ export const fetchOgImage = async (pageUrl: string): Promise<string | null> => {
     return null
   }
 
-  // A tag that exists is not the same as an image that loads. Every deck
-  // listed here bakes an absolute og:image into its HTML, so a deck that
-  // moved host still advertises the address it had when it was built — the
-  // three talks this was written for all point at now.sh from pages now
-  // served off vercel.app. Left alone that is a broken <img> on the landing
-  // page, which is worse than the placeholder it replaces.
+  // A tag that exists is not the same as an image that loads. A deck bakes an
+  // absolute og:image into its HTML at build time, so one that later moves
+  // host goes on advertising the address it had then. The three talks this
+  // was written for did exactly that — 2019 decks still naming now.sh from
+  // pages that had moved to vercel.app — and left alone it is a broken <img>
+  // on the landing page, which is worse than the placeholder it replaces.
+  //
+  // Those three are no longer listed; their decks were migrated into this
+  // repository and the entries came out with them. What they ran into is the
+  // normal condition for a page nobody here controls, so this stays.
   if (await loads(image)) {
     console.log(`[og] ${pageUrl}: ${image}`)
     return image
