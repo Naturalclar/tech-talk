@@ -61,9 +61,24 @@ export const renderCard = ({
   // win by exempting them — and picking the first n by hand would mean this
   // template no longer renders both kinds of card the same way, which is the
   // whole reason it is one template.
+  //
+  // **There is no `decoding="async"` here, and adding one breaks the build's
+  // reproducibility.** It went in beside `loading="lazy"` and made
+  // dist/index.png come out a different size on every build — 71533, 71518
+  // and 71460 bytes over three, against a `dist` that is otherwise
+  // byte-identical. Asynchronous decoding lets a thumbnail be painted a frame
+  // after it is laid out, and stage 8 photographs this page: the shutter
+  // caught the bottom edge of one thumbnail mid-paint, thirty pixels of a
+  // four-row band, differently each run.
+  //
+  // It buys nothing to weigh against that. These are thirty small PNGs, and
+  // the download is what `loading="lazy"` already addresses — 434KB of it.
+  // Waiting the images out in generate-screenshot.ts was tried instead, three
+  // ways, and none of them closed the race; not asking for the decode to be
+  // asynchronous does.
   const image = thumbnail
     ? `<div class="relative m-4 mb-0 aspect-video overflow-hidden rounded-md border border-gray-200 bg-gray-100">
-              <img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-contain" />
+              <img src="${escapeAttr(thumbnail)}" alt="${escapeAttr(title)}" loading="lazy" class="absolute inset-0 h-full w-full object-contain" />
             </div>`
     : `<div class="m-4 mb-0 flex aspect-video items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-sm text-gray-400">no thumbnail</div>`
 
